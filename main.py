@@ -1,40 +1,49 @@
 import cv2
 import numpy as np
-
+from OAKWrapper import *
 from IMPP import *
 
-cap = cv2.VideoCapture(0)
+cap = OAKCamColorDepth()
 
-pipeline = PostProcessingPipeline([
-    #GetRedChannel(),
-    ConvertToGray(showOutput = True, outputWindowName = 'test window'),
-    #AverageBlur(7, True),
-    GaussianBlur(201),
-    #BilateralFilter(5, 10, 10, True)
-    #LaplacianSharpen(0.5, True, True)
-    #UnsharpMasking(7, True)
-    Threshold(200, 250, showOutput = True),
-    #AdaptiveThreshold(200, 11, 2, showOutput = True),
-    #OtsuBinarization(True)
-    DetectContours(draw = True, drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours(100, 8000, printDebug = True),
-    DetectShapes(printResult = True)
+pipeline_D = PostProcessingPipeline([
+    GaussianBlur(1)    
+    
 ])
-
+pipeline_R = PostProcessingPipeline([
+    GetRedChannel(),
+    GaussianBlur(1)
+    
+])
+pipeline_G = PostProcessingPipeline([
+    GetGreenChannel(),
+    GaussianBlur(1)    
+])
+pipeline_B = PostProcessingPipeline([
+    GetBlueChannel(),
+    GaussianBlur(1)
+    
+])
 while(True):
-    ret, frame = cap.read()
+    frameD = cap.getDepthFrame()
 
-    pipeRes = pipeline.run(frame)
+    frame = cap.getFrame()
 
-    shapeImg = frame.copy()
-    for s in pipeRes:
-        cv2.drawContours(shapeImg, [s.contour], -1, (0, 255, 0), 2)
-        cv2.putText(shapeImg, str(s.points), s.center, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255, 2)
+    cv2.imshow("frameD", frameD)
+    cv2.imshow("frame", frame)
 
-    cv2.imshow("Webcam", frame)
-    cv2.imshow("Shapes", shapeImg)
+    pipeRes_R = pipeline_R.run(frame)
+    cv2.imshow("pipeRes_R", pipeRes_R)
+    
+    pipeRes_G = pipeline_G.run(frame)
+    cv2.imshow("pipeRes_G", pipeRes_G)
 
-    if cv2.waitKey(0) == ord('q'):
+    pipeRes_B = pipeline_B.run(frame)
+    cv2.imshow("pipeRes_B", pipeRes_B)
+
+    #pipeRes_D = pipeline_D.run(frameD)
+    #cv2.imshow("pipeRes_D", pipeRes_D)
+
+    if cv2.waitKey(2000) == ord('q'):
         break
 
 cap.release()
