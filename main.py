@@ -17,15 +17,16 @@ def GaussianBlur_D(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_D = newVal - 1
     pipeline_D.blocks[0] = AverageBlur(GaussianBlur_V_D, True)
-Threshold_min_V_D = 0
-Threshold_max_V_D = 255
 def Threshold_min_D(newVal):
-    Threshold_min_V_D = newVal
-    pipeline_D.blocks[1] = Threshold(Threshold_min_V_D, Threshold_max_V_D, showOutput = True)
-    print()
+    Threshold_min_V = newVal
+    Threshold_max_V = pipeline_D.blocks[1].upperBound
+    pipeline_D.blocks[1] = Threshold(Threshold_min_V,Threshold_max_V)
+    print(Threshold_min_V,'-',Threshold_max_V)
 def Threshold_max_D(newVal):
-    Threshold_max_V_D = newVal
-    pipeline_D.blocks[1] = Threshold(Threshold_min_V_D, Threshold_max_V_D, showOutput = True)
+    Threshold_min_V = pipeline_D.blocks[1].lowerBound
+    Threshold_max_V = newVal
+    pipeline_D.blocks[1] = Threshold(Threshold_min_V,Threshold_max_V)
+    print(Threshold_min_V,'-',Threshold_max_V)
 
 pipeline_R = PostProcessingPipeline([
     GetRedChannel(),
@@ -39,15 +40,15 @@ def GaussianBlur_R(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_R = newVal - 1
     pipeline_R.blocks[1] = AverageBlur(GaussianBlur_V_R, True)
-Threshold_min_V_R = 0
-Threshold_max_V_R = 255
 def Threshold_min_R(newVal):
     Threshold_min_V_R = newVal
-    pipeline_R.blocks[2] = Threshold(Threshold_min_V_R, Threshold_max_V_R, showOutput = True)
+    Threshold_max_V_R = pipeline_R.blocks[2].upperBound
+    pipeline_R.blocks[2] = Threshold(Threshold_min_V_R,Threshold_max_V_R)
     print(Threshold_min_V_R,'-',Threshold_max_V_R)
 def Threshold_max_R(newVal):
+    Threshold_min_V_R = pipeline_R.blocks[2].lowerBound
     Threshold_max_V_R = newVal
-    pipeline_R.blocks[2] = Threshold(Threshold_min_V_R, Threshold_max_V_R, showOutput = True)
+    pipeline_R.blocks[2] = Threshold(Threshold_min_V_R,Threshold_max_V_R)
     print(Threshold_min_V_R,'-',Threshold_max_V_R)
 
 pipeline_G = PostProcessingPipeline([
@@ -62,14 +63,16 @@ def GaussianBlur_G(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_G = newVal - 1
     pipeline_G.blocks[1] = AverageBlur(GaussianBlur_V_G, True)
-Threshold_min_V_G = 1
-Threshold_max_V_G = 255
-def Threshold_min_G(self,newVal):
-    self.Threshold_min_V_G = newVal
-    pipeline_G.blocks[2] = Threshold(self.Threshold_min_V_G, self.Threshold_max_V_G, showOutput = True)
-def Threshold_max_G(self,newVal):
-    self.Threshold_max_V_G = newVal
-    pipeline_G.blocks[2] = Threshold(self.Threshold_min_V_G, self.Threshold_max_V_G, showOutput = True)
+def Threshold_min_G(newVal):
+    Threshold_min_V = newVal
+    Threshold_max_V = pipeline_G.blocks[2].upperBound
+    pipeline_G.blocks[2] = Threshold(Threshold_min_V,Threshold_max_V)
+    print(Threshold_min_V,'-',Threshold_max_V)
+def Threshold_max_G(newVal):
+    Threshold_min_V = pipeline_G.blocks[2].lowerBound
+    Threshold_max_V = newVal
+    pipeline_G.blocks[2] = Threshold(Threshold_min_V,Threshold_max_V)
+    print(Threshold_min_V,'-',Threshold_max_V)
 
 pipeline_B = PostProcessingPipeline([
     GetBlueChannel(),
@@ -83,14 +86,16 @@ def GaussianBlur_B(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_B = newVal - 1
     pipeline_B.blocks[1] = AverageBlur(GaussianBlur_V_B, True)
-Threshold_min_V_B = 1
-Threshold_max_V_B = 255
-def Threshold_min_B(self,newVal):
-    self.Threshold_min_V_B = newVal
-    pipeline_B.blocks[2] = Threshold(self.Threshold_min_V_B, self.Threshold_max_V_B, showOutput = True)
-def Threshold_max_B(self,newVal):
-    self.Threshold_max_V_B = newVal
-    pipeline_B.blocks[2] = Threshold(self.Threshold_min_V_B, self.Threshold_max_V_B, showOutput = True)
+def Threshold_min_B(newVal):
+    Threshold_min_V = newVal
+    Threshold_max_V = pipeline_B.blocks[2].upperBound
+    pipeline_B.blocks[2] = Threshold(Threshold_min_V,Threshold_max_V)
+    print(Threshold_min_V,'-',Threshold_max_V)
+def Threshold_max_B(newVal):
+    Threshold_min_V = pipeline_B.blocks[2].lowerBound
+    Threshold_max_V = newVal
+    pipeline_B.blocks[2] = Threshold(Threshold_min_V,Threshold_max_V)
+    print(Threshold_min_V,'-',Threshold_max_V)
 
 cv2.createTrackbar("GaussianBlur_D", "Trackbars", 1, 125, GaussianBlur_D)
 cv2.createTrackbar("GaussianBlur_R", "Trackbars", 1, 125, GaussianBlur_R)
