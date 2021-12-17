@@ -98,21 +98,35 @@ class GetBlueChannel(PostProcessingBlock):
         if self.showOutput:
             cv2.imshow(self.outputWindowName, output)
         return output
+        
+
+# Intensity transformation
+class IntensityPower(PostProcessingBlock):
+    def __init__(self, power: float, showOutput = False, outputWindowName = 'IntensityPower') -> None:
+        self.power = power
+        self.showOutput = showOutput
+        self.outputWindowName = outputWindowName
+
+    def run(self, input):
+        output = input.copy()
+        output = np.array(255*(output / 255) ** self.power, dtype = 'uint8')
+        if self.showOutput:
+            cv2.imshow(self.outputWindowName, output)
+        return output
+
 
 # Blurring
 class AverageBlur(CustomKernel):
     def __init__(self, filterSize, showOutput = False, outputWindowName = 'AverageBlur') -> None:
-        self.kernel = np.ones((filterSize,filterSize), np.float32)/25
+        self.kernel = np.ones((filterSize,filterSize), np.float32)/(filterSize*filterSize)
         self.showOutput = showOutput
         self.outputWindowName = outputWindowName
-
 
 class GaussianBlur(CustomKernel):
     def __init__(self, filterSize, showOutput = False, outputWindowName = 'GaussianBlur') -> None:
         self.kernel = cv2.getGaussianKernel(filterSize, cv2.CV_32F)
         self.showOutput = showOutput
         self.outputWindowName = outputWindowName
-
 
 class MedianBlur(PostProcessingBlock):
     def __init__(self, filterSize, showOutput = False, outputWindowName = 'MedianBlur') -> None:
@@ -125,7 +139,6 @@ class MedianBlur(PostProcessingBlock):
         if self.showOutput:
             cv2.imshow(self.outputWindowName, output)
         return output
-
 
 class BilateralFilter(PostProcessingBlock):
     def __init__(self, filterSize, sigmaColor, sigmaSpace, showOutput = False, outputWindowName = 'BilateralFilter') -> None:
@@ -140,6 +153,7 @@ class BilateralFilter(PostProcessingBlock):
         if self.showOutput:
             cv2.imshow(self.outputWindowName, output)
         return output
+
 
 # Sharpening
 class LaplacianSharpen(CustomKernel):
@@ -170,6 +184,69 @@ class UnsharpMasking(PostProcessingBlock):
         if self.showOutput:
             cv2.imshow(self.outputWindowName, output)
         return output
+
+
+# Edges
+class SobelH(CustomKernel):
+    def __init__(self, showOutput=False, outputWindowName='SobelH') -> None:
+        self.kernel = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], np.float32)
+        self.showOutput = showOutput
+        self.outputWindowName = outputWindowName
+
+class SobelHN(CustomKernel):
+    def __init__(self, showOutput=False, outputWindowName='SobelHN') -> None:
+        self.kernel = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]], np.float32)
+        self.showOutput = showOutput
+        self.outputWindowName = outputWindowName
+
+class SobelV(CustomKernel):
+    def __init__(self, showOutput=False, outputWindowName='SobelV') -> None:
+        self.kernel = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], np.float32)
+        self.showOutput = showOutput
+        self.outputWindowName = outputWindowName
+
+class SobelVN(CustomKernel):
+    def __init__(self, showOutput=False, outputWindowName='SobelVN') -> None:
+        self.kernel = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]], np.float32)
+        self.showOutput = showOutput
+        self.outputWindowName = outputWindowName
+
+class Sobel2(PostProcessingBlock):
+    def __init__(self, showOutput=False, outputWindowName='Sobel2') -> None:
+        self.showOutput = showOutput
+        self.outputWindowName = outputWindowName
+        self.sobelH = SobelH(showOutput)
+        self.sobelV = SobelV(showOutput)
+
+    def run(self, input):
+        output = input.copy()
+        frameSobelH = self.sobelH.run(output)
+        frameSobelV = self.sobelV.run(output)
+        output = frameSobelH + frameSobelV
+        if self.showOutput:
+            cv2.imshow(self.outputWindowName, output)
+        return output
+
+class Sobel4(PostProcessingBlock):
+    def __init__(self, showOutput=False, outputWindowName='Sobel4') -> None:
+        self.showOutput = showOutput
+        self.outputWindowName = outputWindowName
+        self.sobelH = SobelH(showOutput)
+        self.sobelHN = SobelHN(showOutput)
+        self.sobelV = SobelV(showOutput)
+        self.sobelVN = SobelVN(showOutput)
+
+    def run(self, input):
+        output = input.copy()
+        frameSobelH = self.sobelH.run(output)
+        frameSobelHN = self.sobelHN.run(output)
+        frameSobelV = self.sobelV.run(output)
+        frameSobelVN = self.sobelVN.run(output)
+        output = frameSobelH + frameSobelHN + frameSobelV + frameSobelVN
+        if self.showOutput:
+            cv2.imshow(self.outputWindowName, output)
+        return output
+
 
 # Thresholding (https://docs.opencv.org/4.5.2/d7/d4d/tutorial_py_thresholding.html)
 class Threshold(PostProcessingBlock):
@@ -212,6 +289,7 @@ class OtsuBinarization(PostProcessingBlock):
         if self.showOutput:
             cv2.imshow(self.outputWindowName, output)
         return output
+
 
 # Contours (https://www.pyimagesearch.com/2016/02/08/opencv-shape-detection/)
 class ContourDrawInfo:
@@ -262,6 +340,7 @@ class ThresholdContours(PostProcessingBlock):
             if cArea > self.minArea and cArea < self.maxArea:
                 output.append(c)
         return output
+
 
 # Shapes (https://www.pyimagesearch.com/2016/02/08/opencv-shape-detection/)
 class Shape:
