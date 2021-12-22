@@ -1,0 +1,31 @@
+ Program
+   BeforeStart
+     conres = socket_open("192.168.137.1",23)
+     textmsg(conres)
+     targetPos=p[0, 0, 0, 0, 0, 0]
+     receiveFromServ=[0, 0, 0, 0, 0, 0, 0, 0]
+   Robot Program
+     sendToServer="Klar"
+     socket_send_string(sendToServer)
+     Loop conres≟ True 
+       receiveFromServ=socket_read_ascii_float(7)
+       textmsg(receiveFromServ)
+       If receiveFromServ[7]≟1
+         break
+       ElseIf receiveFromServ[7]≟2
+         break
+       ElseIf receiveFromServ[7]≟3
+         break
+       ElseIf receiveFromServ[7]≟4
+         break
+     Loop
+       targetPos=p[receiveFromServ[1],receiveFromServ[2],receiveFromServ[3],receiveFromServ[4],receiveFromServ[5],receiveFromServ[6]]
+       textmsg(targetPos)
+       If targetPos≠p[0, 0, 0, 0, 0, 0]
+         MoveL
+           targetPos
+         break
+     Wait: 1.0
+     targetPos=p[0, 0, 0, 0, 0, 0]
+     MoveL
+       Waypoint_1
