@@ -1,0 +1,88 @@
+def robotprogfirst():
+  set_safety_mode_transition_hardness(0)
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 0)
+  set_tool_analog_input_domain(1, 0)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  set_tool_voltage(12)
+  set_tcp(p[0.0,0.0,0.0,0.0,0.0,0.0])
+  set_payload(0.8)
+  set_gravity([-0.48789816139629183, -0.48342824443588495, 9.795950822487205])
+  global targetPos=p[0, 0, 0, 0, 0, 0]
+  global nest=4
+  global i_var_1=1
+  global current_pose=[0, 0, 0, 0, 0, 0]
+  global receiveFromServ=[0, �, �, �, �, �, �, �]
+  rtde_set_watchdog("speed_slider_mask", 10.0, "ignore")
+  $ 1 "BeforeStart"
+  $ 2 "conres = socket_open('192.168.137.1',23)"
+  conres = socket_open("192.168.137.1",23)
+  $ 3 "textmsg(conres)"
+  textmsg(conres)
+  $ 4 "targetPos=p[0, 0, 0, 0, 0, 0]"
+  targetPos=p[0, 0, 0, 0, 0, 0]
+  $ 5 "receiveFromServ=[0, 0, 0, 0, 0, 0, 0, 0]"
+  receiveFromServ=[0, 0, 0, 0, 0, 0, 0, 0]
+  while (True):
+    $ 6 "Robot Program"
+    $ 7 "sendToServer='Klar'"
+    sendToServer="Klar"
+    $ 8 "socket_send_string(sendToServer)"
+    socket_send_string(sendToServer)
+    $ 9 "Loop conres≟ True "
+    while (conres ==   True  ):
+      $ 10 "receiveFromServ=socket_read_ascii_float(7)"
+      receiveFromServ=socket_read_ascii_float(7)
+      $ 11 "textmsg(receiveFromServ)"
+      textmsg(receiveFromServ)
+      $ 12 "If receiveFromServ[7]≟1"
+      if (receiveFromServ[7] == 1):
+        $ 13 "break"
+        break
+      else:
+        $ 14 "ElseIf receiveFromServ[7]≟2"
+        if (receiveFromServ[7] == 2):
+          $ 15 "break"
+          break
+        else:
+          $ 16 "ElseIf receiveFromServ[7]≟3"
+          if (receiveFromServ[7] == 3):
+            $ 17 "break"
+            break
+          else:
+            $ 18 "ElseIf receiveFromServ[7]≟4"
+            if (receiveFromServ[7] == 4):
+              $ 19 "break"
+              break
+            end
+          end
+        end
+      end
+    end
+    $ 20 "Loop"
+    while (True):
+      $ 21 "targetPos=p[receiveFromServ[1],receiveFromServ[2],receiveFromServ[3],receiveFromServ[4],receiveFromServ[5],receiveFromServ[6]]"
+      targetPos=p[receiveFromServ[1],receiveFromServ[2],receiveFromServ[3],receiveFromServ[4],receiveFromServ[5],receiveFromServ[6]]
+      $ 22 "textmsg(targetPos)"
+      textmsg(targetPos)
+      $ 23 "If targetPos≠p[0, 0, 0, 0, 0, 0]"
+      if (targetPos != p[0, 0, 0, 0, 0, 0]):
+        $ 24 "MoveL"
+        $ 25 "targetPos"
+        movel(pose_trans(p[0.0,0.0,0.0,0.0,0.0,0.0], targetPos), a=1.2, v=0.25)
+        $ 26 "break"
+        break
+      end
+    end
+    $ 28 "Wait: 1.0"
+    sleep(1.0)
+    $ 29 "targetPos=p[0, 0, 0, 0, 0, 0]"
+    targetPos=p[0, 0, 0, 0, 0, 0]
+    $ 30 "MoveL"
+    $ 31 "Waypoint_1"
+    movel(p[-.218947426350, .103633662527, .576491696439, -.855490251653, -1.274852182406, -.141154394925], a=1.2, v=0.25)
+  end
+end
