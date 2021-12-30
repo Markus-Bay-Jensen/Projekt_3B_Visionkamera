@@ -1,12 +1,28 @@
-from QR import QR
+import QR
 import cv2
+from OAKWrapper import *
+O = QR.Omregning('QR.txt')
+cam = OAKCamColor(900,900)
 
+frame = cam.getPreviewFrame()
+Data,R= QR.QR(frame)
+Robot = O.Nulstilling(R)
 
-cap = cv2.VideoCapture(0)
+while True:
+    frame = cam.getPreviewFrame()
 
-ret, frame = cap.read()
+    #Data,R= QR.QR(frame)
+    #Robot = O.Nulstilling(R)
 
-n= QR(frame)
-cv2.waitKey(0)
+    key = cv2.waitKey(500)
 
-print(n)
+    if key == ord('q'):
+        break
+
+    elif key == ord('t'):
+        cam.triggerAutoFocus()
+
+    elif key == ord('a'):
+        cam.startContinousAutoFocus()
+
+print(Robot)

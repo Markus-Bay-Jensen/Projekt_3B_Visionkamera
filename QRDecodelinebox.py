@@ -1,8 +1,7 @@
-import sys, os
+
 import cv2
 import numpy as np
-from pyzbar.pyzbar import decode, ZBarSymbol
-from PIL import Image
+from pyzbar.pyzbar import decode
 import math
 
 def Distance(A = (0,0),B =(0,0)):
@@ -43,9 +42,13 @@ while True:
     img=frame
     for barcode in decode(img):
         pts2 = barcode.rect
+        print(pts2)
         myData = barcode.data.decode('utf-8')
+        print(myData)
         pts = np.array(barcode.polygon,np.int32)
+        print(pts)
         pts = pts.reshape((-1,1,2))
+        print(pts)
         X = pts[0] + ((pts[2] - pts[0])/2)
         Y = pts[1] + ((pts[3] - pts[1])/2)
         XY = ((X + Y)/2)

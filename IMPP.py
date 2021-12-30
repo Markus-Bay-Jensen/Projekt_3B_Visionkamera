@@ -41,7 +41,31 @@ class CustomKernel(PostProcessingBlock):
 
 
 # Conversions
-class ConvertToGray(PostProcessingBlock):
+class ConvertGeneric(PostProcessingBlock):
+    def __init__(self, code: int = cv2.COLOR_BGR2GRAY, showOutput = False, outputWindowName = 'ConvertGeneric') -> None:
+        self.showOutput = showOutput
+        self.outputWindowName = outputWindowName
+        self.code = code
+
+    def run(self, input):
+        output = cv2.cvtColor(input, self.code)
+        if self.showOutput:
+            cv2.imshow(self.outputWindowName, output)
+        return output
+
+class ConvertBGR2Gray(ConvertGeneric):
+    def __init__(self, showOutput=False, outputWindowName='ConvertBGR2Gray') -> None:
+        super().__init__(code=cv2.COLOR_BGR2GRAY, showOutput=showOutput, outputWindowName=outputWindowName)
+
+class ConvertBGR2HSV(ConvertGeneric):
+    def __init__(self, showOutput=False, outputWindowName='ConvertBGR2HSV') -> None:
+        super().__init__(code=cv2.COLOR_BGR2HSV, showOutput=showOutput, outputWindowName=outputWindowName)
+
+class ConvertHSV2BGR(ConvertGeneric):
+    def __init__(self, showOutput=False, outputWindowName='ConvertHSV2BGR') -> None:
+        super().__init__(code=cv2.COLOR_HSV2BGR, showOutput=showOutput, outputWindowName=outputWindowName)
+
+class ConvertToGray(PostProcessingBlock): # Deprecated
     def __init__(self, showOutput = False, outputWindowName = 'Grayscale') -> None:
         self.showOutput = showOutput
         self.outputWindowName = outputWindowName
@@ -262,6 +286,62 @@ class Threshold(PostProcessingBlock):
         if self.showOutput:
             cv2.imshow(self.outputWindowName, output)
         return output
+
+class HSVThreshold(PostProcessingBlock):
+    def __init__(self, lowerBound: np.array = np.array([0,0,0]), upperBound: np.array = np.array([255,255,255]), trackbar: bool = False, showOutput: bool = False, outputWindowName: str = 'HSVThreshold') -> None:
+        self.showOutput = showOutput
+        self.outputWindowName = outputWindowName
+        self.lowerBound = lowerBound
+        self.upperBound = upperBound
+        if trackbar:
+            self.createTrackbar()
+
+    def run(self, input):
+        output = input.copy()
+        mask = cv2.inRange(output, self.lowerBound, self.upperBound)
+        output = cv2.bitwise_and(output, output, mask = mask)
+        if self.showOutput:
+            cv2.imshow(self.outputWindowName, output)
+        return output
+
+    def createTrackbar(self):
+        cv2.namedWindow("HSV Treshold Trackbars")
+        cv2.createTrackbar("LBH", "HSV Treshold Trackbars", self.lowerBound[0], 255, self.setLBH)
+        cv2.createTrackbar("UBH", "HSV Treshold Trackbars", self.upperBound[0], 255, self.setUBH)
+        cv2.createTrackbar("LBS", "HSV Treshold Trackbars", self.lowerBound[1], 255, self.setLBS)
+        cv2.createTrackbar("UBS", "HSV Treshold Trackbars", self.upperBound[1], 255, self.setUBS)
+        cv2.createTrackbar("LBV", "HSV Treshold Trackbars", self.lowerBound[2], 255, self.setLBV)
+        cv2.createTrackbar("UBV", "HSV Treshold Trackbars", self.upperBound[2], 255, self.setUBV)
+
+    def setLBH(self, value: int):
+        if value < 0 or value > 255:
+            return
+        self.lowerBound[0] = value
+
+    def setLBS(self, value: int):
+        if value < 0 or value > 255:
+            return
+        self.lowerBound[1] = value
+
+    def setLBV(self, value: int):
+        if value < 0 or value > 255:
+            return
+        self.lowerBound[2] = value
+
+    def setUBH(self, value: int):
+        if value < 0 or value > 255:
+            return
+        self.upperBound[0] = value
+
+    def setUBS(self, value: int):
+        if value < 0 or value > 255:
+            return
+        self.upperBound[1] = value
+
+    def setUBV(self, value: int):
+        if value < 0 or value > 255:
+            return
+        self.upperBound[2] = value
 
 class AdaptiveThreshold(PostProcessingBlock):
     def __init__(self, upperBound: int, blockSize: int, constant: int, adaptionMode: int = cv2.ADAPTIVE_THRESH_GAUSSIAN_C, thresholdMode: int = cv2.THRESH_BINARY, showOutput: bool = False, outputWindowName: str = 'AdaptiveThreshold') -> None:

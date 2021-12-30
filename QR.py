@@ -1,9 +1,13 @@
-import sys, os
+
 import cv2
 import numpy as np
-from pyzbar.pyzbar import decode, ZBarSymbol
-from PIL import Image
+from pyzbar.pyzbar import decode
 import math
+
+'''Finpudsrotering af billedet
+Finpuds omregningen
+Find ud af hvor mange grader klodsen venner'''
+
 def Distance(A = (0,0),B =(0,0)):
     AX = A[0]-B[0]
     AY = A[1]-B[1]
@@ -60,21 +64,19 @@ def XYMM(m1,m2,XY):
     print('A',A,' B',B,' V',V,' C',C,' O',O,' XY',XY)
     return O,C,V[XY]
 
-def QR(img):
-    nr = 0
+def QR(frame):
+    img = frame.copy()
     Robot = []
     Data = []
-    DataA = []
     for barcode in decode(img):
         pts2 = barcode.rect
+        print(pts2)
         myData = barcode.data.decode('utf-8')
         pts = np.array(barcode.polygon,np.int32)
         pts = pts.reshape((-1,1,2))
         X = pts[0] + ((pts[2] - pts[0])/2)
         Y = pts[1] + ((pts[3] - pts[1])/2)
-        XY = ((X + Y)/2)
-        XY = XY[0]
-        XY = int(XY[0]),int(XY[1])
+        XY = int(X),int(Y)
         print('Data',myData,'x',XY[0],'y',XY[1])
         cv2.polylines(img,[pts],True,(0,0,255),2)
         
@@ -86,72 +88,206 @@ def QR(img):
             Robot.append([int(myData2[1]),XY])
         else:
             Data.insert(-1,[myData,XY])
-    cv2.imshow('Result QR',img)
-    return Data,Robot
+    #cv2.imshow('Result QR',img)
+    return Data,Robot,img     
 
+def QR2(frame):
+    img = frame.copy()
+    Robot = []
+    Data = []
+    for barcode in decode(img):
+        pts2 = barcode.rect
+        print(pts2)
+        myData = barcode.data.decode('utf-8')
+        pts1 = np.array(barcode.polygon,np.int32)
+        pts = pts1.reshape((-1,1,2))
+        X = pts[0] + ((pts[2] - pts[0])/2)
+        Y = pts[1] + ((pts[3] - pts[1])/2)
+        XY = int(X),int(Y)
+        print('Data',myData,'x',XY[0],'y',XY[1])
+        cv2.polylines(img,[pts],True,(0,0,255),2)
+        
+        cv2.putText(img,myData,(XY),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,0,255),2 )
+        QR_XY = myData,XY
+        #print(QR_XY)
+        myData2 = myData.split(',')
+        if myData2[0] == 'Robot':
+            Robot.append([int(myData2[1]),XY])
+        else:
+            Data.insert(-1,[myData,XY,pts1])
+    #cv2.imshow('Result QR',img)
+    return Data,Robot,img     
 
 class Omregning:
 
     def __init__(self,navn) -> None:
-        self.Robot_O = [0,0,0,0,0,0]
+        self.Robot_O = [0,0,0,0]
         self.Robotnr = [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]
         file = open(navn , "r")     
         data5 = file.read().split("\n")
+        self.angle = 0
+        
         for nr in data5:
-            data4 = nr.split(",")
+            data4 = nr.split(".")
             self.Robotnr[int(data4[0])] = [int(data4[1]),int(data4[2])]
         print('Robotnr',self.Robotnr)
-
+      
+    def Nulstilling(self,img):
+        QR_img = img.copy()
+        Data,Robot,QR_img1 = QR(QR_img)
+        (w, h) = img.shape[:2]
+        center = (w / 2, h / 2)
+        scale = 1.0
         
-
-    def Nulstilling(self,Robot):
+        
         Robotnr = self.Robotnr
-        Robot_O = self.Robot_O
+        Break = False
+
         nr1 = 0
-        
         for m1 in Robot:
             nr2 = 0
+            if Break:
+                        break
             for m2 in Robot:
+                if Robotnr[m1[0]] != Robotnr[m2[0]] :#and int(nr1) < int(nr2):
+                    if Break:
+                        break
+                    RO_A_P_X = m1[1][0]
+                    RO_A_P_Y = m1[1][1]
+                    RO_B_P_X = m2[1][0]
+                    RO_B_P_Y = m2[1][1]
+                    RO_A_CM_X = Robotnr[m1[0]][0]
+                    RO_B_CM_X = Robotnr[m2[0]][0]
+                    RO_A_CM_Y = Robotnr[m1[0]][1]
+                    RO_B_CM_Y = Robotnr[m2[0]][1]
+                    CM_Y = RO_A_CM_Y - RO_B_CM_Y
+                    CM_X = RO_A_CM_X - RO_B_CM_X
+                    print (CM_Y,CM_X)
+                    P_C = RO_A_P_Y - RO_B_P_Y
+                    P_B = RO_A_P_X - RO_B_P_X
+                    P_A = ((P_B)**2+(P_C)**2)**0.5
+                    print('P_A',P_A,'P_B',P_B,'P_C',P_C)
+                    V_A = math.tan( P_C / P_B )*180/math.pi
+                    if  RO_A_CM_X ==  RO_B_CM_X:
+                        if CM_Y >=0:
+                            if P_B >=0:
+                                self.angle = (V_A)-90
+                                Break = True
+                                print('0 angle A:',V_A,'angle:',self.angle)
+                                break
+                            elif P_B <0:
+                                self.angle = V_A*-1+180-90
+                                Break = True
+                                print('1 angle A:',V_A,'angle:',self.angle)
+                                break
+
+                        elif CM_Y <0:
+                            if P_B >=0:
+                                self.angle = V_A-90
+                                Break = True
+                                print('2 angle A:',V_A,'angle:',self.angle)
+                                break
+                            elif P_B <0:
+                                self.angle = V_A*-1-90
+                                Break = True
+                                print('3 angle A:',V_A,'angle:',self.angle)
+                                break
+                    nr2 +=1
+            nr1 +=1
+        QR_img = self.Rotering(img.copy())
+        Data,Robot,QR_img = QR(QR_img)
+        X_t = False
+        Y_t = False
+        Break1 = False
+        Break2 = False
+        nr1 = 0
+        for m2 in Robot:
+            nr2 = 0
+            if Break1 and Break2:
+                        break
+            for m1 in Robot:
+                if Break1 and Break2:
+                    break
                 if Robotnr[m1[0]] != Robotnr[m2[0]] and int(nr1) < int(nr2):
-                    print(Robotnr[m1[0]],Robotnr[m2[0]],nr1,nr2)
-                    if  int(Robotnr[m1[0]][0]) ==  int(Robotnr[m2[0]][0]):
-                        Axx = (((m1[1][1])+ Robotnr[m1[0]][1])/((m1[1][1])+ Robotnr[m1[0]][1]+m2[1][1]-Robotnr[m2[0]][1]))
-                        Axy = (((m1[1][0])+ Robotnr[m1[0]][1])/((m1[1][0])+ Robotnr[m1[0]][1]+m2[1][0]-Robotnr[m2[0]][1]))
-                        Cx = Robotnr[m1[0]][1] + (((m1[1][1])+ Robotnr[m1[0]][1])/((m1[1][1])+ Robotnr[m1[0]][1]+m2[1][1]-Robotnr[m2[0]][1]))
-                        Robot_O[0] = Axx
-                        Robot_O[1] = Axy
-                        Robot_O[2] = Cx
-                    elif int(Robotnr[m1[0]][1]) ==  int(Robotnr[m2[0]][1]):
-                        Ayx = (((m1[1][1])+ Robotnr[m1[0]][0])/((m1[1][1])+ Robotnr[m1[0]][0]+m2[1][1]-Robotnr[m2[0]][0]))
-                        Ayy = (((m1[1][0])+ Robotnr[m1[0]][0])/((m1[1][0])+ Robotnr[m1[0]][0]+m2[1][0]-Robotnr[m2[0]][0]))
-                        Cy =Robotnr[m1[0]][0] + (((m1[1][0])+ Robotnr[m1[0]][0])/((m1[1][0])+ Robotnr[m1[0]][0]+m2[1][0]-Robotnr[m2[0]][0]))
-                        Robot_O[3] = Ayx
-                        Robot_O[4] = Ayy
-                        Robot_O[5] = Cy
                     
-                nr2 += 1
-            
+                    if Robotnr[m1[0]][0]==Robotnr[m2[0]][0]:
+                        print(m1,'-',m2)
+                        print(Robotnr[m1[0]],'-',Robotnr[m2[0]])
+                        print('M1 - M2')
+                        QR_img = cv2.line(QR_img,m2[1],m1[1],(0,0,255),4)
+                        Break1 = True
+                        
+                        F = m2[1][1]-m1[1][1]
+                        B = Robotnr[m2[0]][1]-Robotnr[m1[0]][1]
+                        C = -(B/F)
+                        A = Robotnr[m2[0]][1]+C
+                        self.Robot_O[3] = A
+                        self.Robot_O[2] = C
+                        print(A,C,B,F,'Y')
+                    elif Robotnr[m1[0]][1]==Robotnr[m2[0]][1]:
+                        print(m1,'-',m2)
+                        print(Robotnr[m1[0]],'-',Robotnr[m2[0]])
+                        print('M1 - M2')
+                        QR_img = cv2.line(QR_img,m2[1],m1[1],(0,255,0),4)
+                        Break2 = True
+                        F = m2[1][0]-m1[1][0]
+                        B = Robotnr[m2[0]][0]-Robotnr[m1[0]][0]
+                        C = -(B/F)
+                        A = Robotnr[m2[0]][0]+C
+                        self.Robot_O[1] = A
+                        self.Robot_O[0] = C
+                        print(A,C,B,F,'x')
+                nr2 +=1
+            nr1 +=1
+        print ('X',X_t,'Y',Y_t)
+        Break = False
+        if Break1 and Break2:
+            Break = True
+        return QR_img,Break
 
-            nr1 += 1
-        print('Axx Axy Cx Ayx Ayy Cy')
-        print(Robot_O)    
-        #print(nr2)
-        self.Robot_O = Robot_O
-        
-        return Robot_O
+    def Omregning(self,P_XY,img):
+        cm_y = self.Robot_O[1] + P_XY[0] * self.Robot_O[0]
+        cm_X = self.Robot_O[3] + P_XY[1] * self.Robot_O[2]
+        print('cm_X',cm_X,'=',self.Robot_O[1],'+',P_XY[1],'*',self.Robot_O[0])
+        print('cm_Y',cm_y,'=',self.Robot_O[3],'+',P_XY[0],'*',self.Robot_O[2])
+        cv2.putText(img,'X:'+str(int(cm_X*100)/100),(P_XY[0],P_XY[1]+25),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0),2 )
+        cv2.putText(img,'Y:'+str(int(cm_y*100)/100),(P_XY[0],P_XY[1]+50),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0),2 )
+        return [cm_X,cm_y],img
 
-    def Omregning(self,P_XY):
-        Axx = self.Robot_O[0]
-        Axy = self.Robot_O[1]
-        Cx = self.Robot_O[2]
-        Ayx = self.Robot_O[3]
-        Ayy = self.Robot_O[4]
-        Cy = self.Robot_O[5]
-        P_X = P_XY[0]
-        P_Y = P_XY[1]
-        X = Cx + P_X * Axx + P_Y * Axy
-        Y = Cy + P_Y * Ayy + P_X * Ayx
-        print('Axx',Axx,'Axy',Axy,'Cx',Cx,'P_X',P_X,'X',X)
-        print('Ayx',Ayx,'Ayy',Ayy,'Cy',Cy,'P_y',P_Y,'y',Y)
-        return [X,Y]
+    def Rotering(self,img):
+        (h, w) = img.shape[:2]
+        center = (w / 2, h / 2)
+        scale = 1.0
+        M = cv2.getRotationMatrix2D(center, self.angle, scale)
+        rotated = cv2.warpAffine(img, M, (w, h))
         
+        return rotated
+    
+    def Rotering_m(self,img):
+        (h, w) = img.shape[:2]
+        center = (w / 2, h / 2)
+        scale = 1.0
+        M = cv2.getRotationMatrix2D(center, -self.angle, scale)
+        rotated = cv2.warpAffine(img, M, (w, h))
+        
+        return rotated
+
+    def Omregning_V(self,P_XY,img):
+        X = P_XY[0][0] + ((P_XY[2][0] - P_XY[0][0])/2)
+        Y = P_XY[1][1] + ((P_XY[3][1] - P_XY[1][1])/2)
+        XY = int(X),int(Y)
+        CM_XY,img = self.Omregning(XY,img)
+        M1 = P_XY[0][0] - P_XY[1][0]
+        M2 = P_XY[0][1] - P_XY[1][1]
+        Px = math.sqrt(M1**2 + M2**2)
+        M3 = P_XY[0][0] - P_XY[2][0]
+        M4 = P_XY[0][1] - P_XY[2][1]
+        Py = math.sqrt(M3**2 + M4**2)
+        if Px >= Py:
+            V = math.sin( M3 / Py )*180/math.pi
+            print(M3,M4,Py,V,'0')
+        else:
+            V = math.sin( M1 / Px )*180/math.pi
+            print(M1,M2,Px,V,'1')
+        cv2.putText(img,'V:'+str(int(V*10)/10),(P_XY[0],P_XY[1]+75),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0),2 )
+        return XY,V,img
