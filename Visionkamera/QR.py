@@ -74,8 +74,9 @@ def QR(frame):
         myData = barcode.data.decode('utf-8')
         pts = np.array(barcode.polygon,np.int32)
         pts = pts.reshape((-1,1,2))
-        X = pts[0] + ((pts[2] - pts[0])/2)
-        Y = pts[1] + ((pts[3] - pts[1])/2)
+        X = pts[0][0][0] + ((pts[2][0][0] - pts[0][0][0])/2)
+        Y = pts[1][0][1] + ((pts[3][0][1] - pts[1][0][1])/2)
+        print(X,Y,pts)
         XY = int(X),int(Y)
         print('Data',myData,'x',XY[0],'y',XY[1])
         cv2.polylines(img,[pts],True,(0,0,255),2)
@@ -128,8 +129,8 @@ class Omregning:
         self.angle = 0
         
         for nr in data5:
-            data4 = nr.split(".")
-            self.Robotnr[int(data4[0])] = [int(data4[1]),int(data4[2])]
+            data4 = nr.split(",")
+            self.Robotnr[int(data4[0])] = [int(data4[1])/100,int(data4[2])/100]
         print('Robotnr',self.Robotnr)
       
     def Nulstilling(self,img):
@@ -162,7 +163,7 @@ class Omregning:
                     RO_B_CM_Y = Robotnr[m2[0]][1]
                     CM_Y = RO_A_CM_Y - RO_B_CM_Y
                     CM_X = RO_A_CM_X - RO_B_CM_X
-                    print (CM_Y,CM_X)
+                    #print (CM_Y,CM_X)
                     P_C = RO_A_P_Y - RO_B_P_Y
                     P_B = RO_A_P_X - RO_B_P_X
                     P_A = ((P_B)**2+(P_C)**2)**0.5
@@ -173,24 +174,24 @@ class Omregning:
                             if P_B >=0:
                                 self.angle = (V_A)-90
                                 Break = True
-                                print('0 angle A:',V_A,'angle:',self.angle)
+                                #print('0 angle A:',V_A,'angle:',self.angle)
                                 break
                             elif P_B <0:
                                 self.angle = V_A*-1+180-90
                                 Break = True
-                                print('1 angle A:',V_A,'angle:',self.angle)
+                                #print('1 angle A:',V_A,'angle:',self.angle)
                                 break
 
                         elif CM_Y <0:
                             if P_B >=0:
                                 self.angle = V_A-90
                                 Break = True
-                                print('2 angle A:',V_A,'angle:',self.angle)
+                                #print('2 angle A:',V_A,'angle:',self.angle)
                                 break
                             elif P_B <0:
                                 self.angle = V_A*-1-90
                                 Break = True
-                                print('3 angle A:',V_A,'angle:',self.angle)
+                                #print('3 angle A:',V_A,'angle:',self.angle)
                                 break
                     nr2 +=1
             nr1 +=1
@@ -211,9 +212,9 @@ class Omregning:
                 if Robotnr[m1[0]] != Robotnr[m2[0]] and int(nr1) < int(nr2):
                     
                     if Robotnr[m1[0]][0]==Robotnr[m2[0]][0]:
-                        print(m1,'-',m2)
-                        print(Robotnr[m1[0]],'-',Robotnr[m2[0]])
-                        print('M1 - M2')
+                        #print(m1,'-',m2)
+                        #print(Robotnr[m1[0]],'-',Robotnr[m2[0]])
+                        #print('M1 - M2')
                         QR_img = cv2.line(QR_img,m2[1],m1[1],(0,0,255),4)
                         Break1 = True
                         
@@ -225,9 +226,9 @@ class Omregning:
                         self.Robot_O[2] = C
                         print(A,C,B,F,'Y')
                     elif Robotnr[m1[0]][1]==Robotnr[m2[0]][1]:
-                        print(m1,'-',m2)
-                        print(Robotnr[m1[0]],'-',Robotnr[m2[0]])
-                        print('M1 - M2')
+                        #print(m1,'-',m2)
+                        #print(Robotnr[m1[0]],'-',Robotnr[m2[0]])
+                        #print('M1 - M2')
                         QR_img = cv2.line(QR_img,m2[1],m1[1],(0,255,0),4)
                         Break2 = True
                         F = m2[1][0]-m1[1][0]
@@ -273,15 +274,16 @@ class Omregning:
         return rotated
 
     def Omregning_V(self,P_XY,img):
-        X = P_XY[0][0] + ((P_XY[2][0] - P_XY[0][0])/2)
-        Y = P_XY[1][1] + ((P_XY[3][1] - P_XY[1][1])/2)
+        #print(P_XY)
+        X = P_XY[0][0][0] + ((P_XY[2][0][0] - P_XY[0][0][0])/2)
+        Y = P_XY[1][0][1] + ((P_XY[3][0][1] - P_XY[1][0][1])/2)
         XY = int(X),int(Y)
         CM_XY,img = self.Omregning(XY,img)
-        M1 = P_XY[0][0] - P_XY[1][0]
-        M2 = P_XY[0][1] - P_XY[1][1]
+        M1 = P_XY[0][0][0] - P_XY[1][0][0]
+        M2 = P_XY[0][0][1] - P_XY[1][0][1]
         Px = math.sqrt(M1**2 + M2**2)
-        M3 = P_XY[0][0] - P_XY[2][0]
-        M4 = P_XY[0][1] - P_XY[2][1]
+        M3 = P_XY[0][0][0] - P_XY[2][0][0]
+        M4 = P_XY[0][0][1] - P_XY[2][0][1]
         Py = math.sqrt(M3**2 + M4**2)
         if Px >= Py:
             V = math.sin( M3 / Py )*180/math.pi
@@ -289,8 +291,8 @@ class Omregning:
         else:
             V = math.sin( M1 / Px )*180/math.pi
             print(M1,M2,Px,V,'1')
-        cv2.putText(img,'V:'+str(int(V*10)/10),(P_XY[0],P_XY[1]+75),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0),2 )
-        return XY,V,img
+        cv2.putText(img,'V:'+str(int(V*10)/10),(XY[0],XY[1]+75),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0),2 )
+        return CM_XY,V,img
 
 class file:
 

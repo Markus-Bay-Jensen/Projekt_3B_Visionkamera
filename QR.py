@@ -291,3 +291,22 @@ class Omregning:
             print(M1,M2,Px,V,'1')
         cv2.putText(img,'V:'+str(int(V*10)/10),(P_XY[0],P_XY[1]+75),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0),2 )
         return XY,V,img
+
+class file:
+
+    def __init__(self,navn) -> None:
+        self.data = {}
+        file = open(navn , "r")     
+        data5 = file.read().split("\n")
+        
+        for nr in data5:
+            data4 = nr.split(":")
+            if data4 != '':
+                self.data[data4[0]] = data4[1]
+        print('data',self.data)
+        return self.data
+
+    def Gem (self,data):
+        self.data =data
+        for m in self.data:
+            print(m)

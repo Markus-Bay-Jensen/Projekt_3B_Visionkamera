@@ -253,6 +253,7 @@ def PipeRes(frame):
             if s.points == 4:
                 cv2.drawContours(shapeImg, [s.contour], -1, (0, 255, 0), 4)
                 Firkan_Liste.append([m1,s.center,s.contour])
+                break
         cv2.imshow("Shapes "+str(m1), shapeImg)
         m1 +=1
     return Firkan_Liste
@@ -262,11 +263,11 @@ def PipeRes(frame):
 
 
 Robot_o = QR.Omregning('QR.txt')
-cap = OAKCamColorDepth(900,800)
+cap = OAKCamColorDepth(1920,1080)
 qr = True
-qr2 = True
-Firkan = False
-tcp_PI = False
+qr2 = False
+Firkan = True
+tcp_IP = False
 while(True):
     frame = cap.getPreviewFrame()
     frame = Robot_o.Rotering(frame)
@@ -274,10 +275,10 @@ while(True):
         
         while(True):
             
-            frame = cap.getPreviewFrame()
-            #pipeline_QR.run(frame.copy())
-            frame,Break= Robot_o.Nulstilling(frame)
-            cv2.imshow("QR", frame)
+            frame_QR = cap.getPreviewFrame()
+            frame_QR = pipeline_QR.run(frame_QR.copy())
+            frame_QR,Break= Robot_o.Nulstilling(frame_QR)
+            cv2.imshow("QR", frame_QR)
             key = cv2.waitKey(100)
             if Break:
                 break
@@ -302,12 +303,12 @@ while(True):
         frame_Firkan =frame.copy()
         for f in Firkan_Liste:
             XY , V , frame_Firkan = Robot_o.Omregning_V(f[2],frame_Firkan)
-            print('CM:',XY,' P:',f[1],' F:',f[0])
-            Firkan_cm.append(XY,V,f[0]) 
+            print('CM:',XY,' P:',f[1],'V:',V,' F:',f[0])
+            Firkan_cm.append([XY,V,f[0]]) 
         cv2.imshow("Firkan", frame_Firkan)
         frame = frame_Firkan
 
-    if tcp_PI:
+    if tcp_IP:
         TCP.TCP_Aben()
         Besked = TCP.TCP_Modtaget()
         TCP.TCP_Send('0')
