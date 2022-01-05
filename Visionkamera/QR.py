@@ -157,6 +157,7 @@ class Omregning:
                     RO_A_P_Y = m1[1][1]
                     RO_B_P_X = m2[1][0]
                     RO_B_P_Y = m2[1][1]
+
                     RO_A_CM_X = Robotnr[m1[0]][0]
                     RO_B_CM_X = Robotnr[m2[0]][0]
                     RO_A_CM_Y = Robotnr[m1[0]][1]
@@ -217,11 +218,11 @@ class Omregning:
                         #print('M1 - M2')
                         QR_img = cv2.line(QR_img,m2[1],m1[1],(0,0,255),4)
                         Break1 = True
-                        
+                        print(m2[1][1],m1[1][1],Robotnr[m2[0]][1],Robotnr[m1[0]][1])
                         F = m2[1][1]-m1[1][1]
                         B = Robotnr[m2[0]][1]-Robotnr[m1[0]][1]
-                        C = -(B/F)
-                        A = Robotnr[m2[0]][1]+C
+                        C = B/F
+                        A = -C * m2[1][1] + Robotnr[m2[0]][1]
 
                         self.Robot_O[3] = A
                         self.Robot_O[2] = C
@@ -234,11 +235,11 @@ class Omregning:
                         #print('M1 - M2')
                         QR_img = cv2.line(QR_img,m2[1],m1[1],(0,255,0),4)
                         Break2 = True
-
+                        print(m2[1][0],m1[1][0],Robotnr[m2[0]][0],Robotnr[m1[0]][0])
                         F = m2[1][0]-m1[1][0]
                         B = Robotnr[m2[0]][0]-Robotnr[m1[0]][0]
-                        C = (B/F)
-                        A = Robotnr[m2[0]][0]+C
+                        C = B/F
+                        A = -C * m2[1][0] + Robotnr[m2[0]][0]
 
                         self.Robot_O[1] = A
                         self.Robot_O[0] = C

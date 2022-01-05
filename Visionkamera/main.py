@@ -1,8 +1,8 @@
-from States import LoadData
+from States import Opstart
 from CustomStateMachine import *
 import cv2
 
-startingState = LoadData()
+startingState = Opstart()
 sm = MyStateMachine(startingState)
 sm.Run()
 

@@ -72,14 +72,14 @@ class TCP_pi_Server:
         self.s.bind((HOST, PORT))
         self.s.listen(1)
         self.AntalKlienter = 1
-        self.conn = []
+        #self.conn
         #self.conn[AntalKlienter] = None
         #self.addr[AntalKlienter] = None
     
     def TCP_Aben (self, ID = 0):
         self.conn, addr = self.s.accept()
-        print('Connection from: ', self.addr, ' ID: ',ID)
-        return self.conn[ID],addr
+        print('Connection from: ', self.conn, ' ID: ',ID)
+        return self.conn,addr
         
 
     def TCP_Modtaget (self, ID = 0, L = 4096,TCP_Luk = 1):
@@ -109,10 +109,15 @@ class TCP_pi_Server:
 
     def TCP_Send_T(self, data = [], ID = 0):
         m2 = 0
-        for m in data:
-            msgToSendInBinary = msgToSendInBinary + m.to_bytes(2, 'big')
-            m2 += 1
-        msgToSendInBinary = m2.to_bytes(2, 'big') + msgToSendInBinary
+        
+        msgToSendInBinary = int(data[0]).to_bytes(2, 'big')
+        msgToSendInBinary += int(data[1]).to_bytes(2, 'big')
+        msgToSendInBinary += int(data[2]).to_bytes(2, 'big')
+        msgToSendInBinary += int(data[3]).to_bytes(2, 'big')
+        msgToSendInBinary += int(data[4]).to_bytes(2, 'big')
+        msgToSendInBinary += int(data[5]).to_bytes(2, 'big')
+        msgToSendInBinary += int(data[6]).to_bytes(2, 'big')
+        #msgToSendInBinary = m2.to_bytes(2, 'big') + msgToSendInBinary
         print(msgToSendInBinary) 
         self.conn.sendall(msgToSendInBinary)
         
