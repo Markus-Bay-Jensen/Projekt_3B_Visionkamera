@@ -70,15 +70,15 @@ def QR(frame):
     Data = []
     for barcode in decode(img):
         pts2 = barcode.rect
-        print(pts2)
+        #print(pts2)
         myData = barcode.data.decode('utf-8')
         pts = np.array(barcode.polygon,np.int32)
         pts = pts.reshape((-1,1,2))
         X = pts[0][0][0] + ((pts[2][0][0] - pts[0][0][0])/2)
         Y = pts[1][0][1] + ((pts[3][0][1] - pts[1][0][1])/2)
-        print(X,Y,pts)
+        #print(X,Y,pts)
         XY = int(X),int(Y)
-        print('Data',myData,'x',XY[0],'y',XY[1])
+        #print('Data',myData,'x',XY[0],'y',XY[1])
         cv2.polylines(img,[pts],True,(0,0,255),2)
         
         cv2.putText(img,myData,(XY),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,0,255),2 )
@@ -167,7 +167,7 @@ class Omregning:
                     P_C = RO_A_P_Y - RO_B_P_Y
                     P_B = RO_A_P_X - RO_B_P_X
                     P_A = ((P_B)**2+(P_C)**2)**0.5
-                    print('P_A',P_A,'P_B',P_B,'P_C',P_C)
+                    #print('P_A',P_A,'P_B',P_B,'P_C',P_C)
                     V_A = math.tan( P_C / P_B )*180/math.pi
                     if  RO_A_CM_X ==  RO_B_CM_X:
                         if CM_Y >=0:
@@ -222,28 +222,35 @@ class Omregning:
                         B = Robotnr[m2[0]][1]-Robotnr[m1[0]][1]
                         C = -(B/F)
                         A = Robotnr[m2[0]][1]+C
+
                         self.Robot_O[3] = A
                         self.Robot_O[2] = C
                         print(A,C,B,F,'Y')
+
+
                     elif Robotnr[m1[0]][1]==Robotnr[m2[0]][1]:
                         #print(m1,'-',m2)
                         #print(Robotnr[m1[0]],'-',Robotnr[m2[0]])
                         #print('M1 - M2')
                         QR_img = cv2.line(QR_img,m2[1],m1[1],(0,255,0),4)
                         Break2 = True
+
                         F = m2[1][0]-m1[1][0]
                         B = Robotnr[m2[0]][0]-Robotnr[m1[0]][0]
-                        C = -(B/F)
+                        C = (B/F)
                         A = Robotnr[m2[0]][0]+C
+
                         self.Robot_O[1] = A
                         self.Robot_O[0] = C
                         print(A,C,B,F,'x')
                 nr2 +=1
             nr1 +=1
-        print ('X',X_t,'Y',Y_t)
+        print ('X',Break2,'Y',Break1)
         Break = False
         if Break1 and Break2:
+            print(self.Robot_O)
             Break = True
+        print('')
         return QR_img,Break
 
     def Omregning(self,P_XY,img):

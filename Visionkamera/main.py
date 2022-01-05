@@ -261,18 +261,27 @@ def PipeRes(frame):
 
 
 
-
+F1 = 0
+F2 = 0
+F3 = 0
 Robot_o = QR.Omregning('QR.txt')
 cap = OAKCamColorDepth(1920,1080)
 qr = True
 qr2 = False
 Firkan = True
 tcp_IP = False
+
 while(True):
     frame = cap.getPreviewFrame()
     frame = Robot_o.Rotering(frame)
+    print('')
     if qr:
         
+        if tcp_IP:
+            TCP.TCP_Aben()
+            Besked = TCP.TCP_Modtaget()
+            
+
         while(True):
             
             frame_QR = cap.getPreviewFrame()
@@ -309,9 +318,35 @@ while(True):
         frame = frame_Firkan
 
     if tcp_IP:
-        TCP.TCP_Aben()
-        Besked = TCP.TCP_Modtaget()
-        TCP.TCP_Send('0')
+        M2 = [0,0,0,0,0,0]
+        M = str(M2[0])+','+str(M2[1])+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+',0'
+        F1_ = False
+        F2_ = False
+        F3_ = False
+        for F_cm in Firkan_cm:
+            if F_cm[2] == 1:
+                F1_ = True
+            if F_cm[2] == 2:
+                F2_ = True
+            if F_cm[2] == 3:
+                F3_ = True
+        F1_3 = F1_ and ((F2_==False or F1 <= F2) and (F3_==False or F1 <= F3))
+        F2_3 = F2_ and ((F1_==False or F2 < F1) and (F3_==False or F2 <= F3))
+        F3_3 = F3_ and ((F1_==False or F3 < F1) and (F2_==False or F3 < F2))
+        for F_cm in Firkan_cm:
+            if F1_3 and F_cm[2] == 1:
+                M  = str(F1_3[0][0]/100)+','+str(F1_3[0][1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+str(F1_3[2])
+                break
+            if F2_3 and F_cm[2] == 2:
+                M  = str(F1_3[0][0]/100)+','+str(F1_3[0][1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+str(F1_3[2])
+                break
+            if F3_3 and F_cm[2] == 3:
+                M  = str(F1_3[0][0]/100)+','+str(F1_3[0][1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+str(F1_3[2])
+                break
+            if F_cm[2] >= 4 and F1_ == False and F2_ == False and F3_ == False:
+                M  = str(F1_3[0][0]/100)+','+str(F1_3[0][1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+str(F1_3[2])
+                break
+        TCP.TCP_Send(M)
 
     cv2.imshow("frame", frame)
 

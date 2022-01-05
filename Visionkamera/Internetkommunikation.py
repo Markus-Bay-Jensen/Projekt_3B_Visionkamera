@@ -107,6 +107,15 @@ class TCP_pi_Server:
         print('data: ',data2)
         return data2
 
+    def TCP_Send_T(self, data = [], ID = 0):
+        m2 = 0
+        for m in data:
+            msgToSendInBinary = msgToSendInBinary + m.to_bytes(2, 'big')
+            m2 += 1
+        msgToSendInBinary = m2.to_bytes(2, 'big') + msgToSendInBinary
+        print(msgToSendInBinary) 
+        self.conn.sendall(msgToSendInBinary)
+        
     def TCP_Send(self, data, ID = 0):
         data2 = str(data) 
         msgToSendInBinary = data2.encode('ascii')
