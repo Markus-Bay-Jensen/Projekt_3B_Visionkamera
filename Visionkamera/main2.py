@@ -5,38 +5,6 @@ from IMPP import *
 import QR
 import Internetkommunikation
 
-while True:
-    ny = False
-    file = QR.file(input("Indtast vision kamera navn: ")+'.txt')
-    M = input('er det et nyt kamera (y/n) ')
-    if M == 'n':
-        file_data = file.Aben()
-        break
-    elif M == 'y':
-        M = input('Vil du låne filer fra et andet kamera (y/n) ')
-        if M == 'y':
-            file_data = file.Aben(input("Indtast vision kamera navn: ")+'.txt')
-            file.Gem()
-            break
-        elif M == 'n':
-            file_data = {'filterSize_Q':1,'filterSize_1':1,'filterSize_2':1,'filterSize_3':1,'filterSize_4':1,'Threshold_1':1,'ThresholdContours_min_1':1,'ThresholdContours_max_1':1,'Threshold_2':1,'ThresholdContours_min_2':1,'ThresholdContours_max_2':1,'Threshold_3':1,'ThresholdContours_min_3':1,'ThresholdContours_max_3':1,'Threshold_4':1,'ThresholdContours_min_4':1,'ThresholdContours_max_4':1,'lowerBound_1':'0,0,0','upperBound_1':'0,0,0','lowerBound_2':'0,0,0','upperBound_2':'0,0,0','lowerBound_3':'0,0,0','upperBound_3':'0,0,0'}
-            file_data['PORT'] = input('PORT :')
-            file_data['HOST'] = input('HOST :')
-            M = input('Har du en fil med QR-kode positioner (y/n) ')
-            file_data['file_QR'] = input('file_QR :')+'.txt'
-            if M =='n':
-                Q = open(file_data['file_QR'], "w")
-                while True: 
-                    print('Når du er færdig med at skrive QR-kode er en test q \n Første tal er QR-koden nummer \n Næste tal er QR-koden X aksen \n Sidste nummer er QR-koden Y X aksen \n Den skal se sådan her ud 0,0,0')
-                    M = input('>>>>>>>>')
-                    if M =='q': break
-                    Q.write(M+',\n')
-                Q.close()
-            file.Gem(file_data)
-            break
-
-
-TCP = Internetkommunikation.TCP_pi_Server(HOST=file_data['HOST'],PORT=int(file_data['PORT']))
 
 
 
@@ -67,6 +35,7 @@ class Threshold2(Threshold):
         if value < 0 or value > 255:
             return
         self.upperBound = value
+
 class ThresholdContours2(ThresholdContours):
     def __init__(self, minArea: float, maxArea: float, printDebug: bool = False,trackbar: bool = False,namedWindow=True,WindName='ThresholdContours') -> None:
         self.minArea = minArea
@@ -92,6 +61,7 @@ class ThresholdContours2(ThresholdContours):
         if value < 0 or value > 100000:
             return
         self.maxArea = value
+
 class HSVThreshold2(HSVThreshold):
     def __init__(self, lowerBound: np.array = np.array([0, 0, 0]), upperBound: np.array = np.array([255, 255, 255]), trackbar: bool = False, showOutput: bool = False, outputWindowName: str = 'HSVThreshold',namedWindow=True,WindName='HSV Treshold Trackbars') -> None:
         self.showOutput = showOutput
@@ -112,6 +82,7 @@ class HSVThreshold2(HSVThreshold):
         cv2.createTrackbar("HSV_UBS", self.WindName, self.upperBound[1], 255, self.setUBS)
         cv2.createTrackbar("HSV_LBV", self.WindName, self.lowerBound[2], 255, self.setLBV)
         cv2.createTrackbar("HSV_UBV", self.WindName, self.upperBound[2], 255, self.setUBV)
+
 class Erode(PostProcessingBlock):
 
     def __init__(self,kernel,iterations, showOutput = False, outputWindowName = 'Erosion') -> None:
@@ -184,7 +155,7 @@ cv2.namedWindow('Trackbar 3')
 cv2.namedWindow('Trackbar 4')
 pipeline_QR = PostProcessingPipeline([
     GetGreenChannel(),
-    AverageBlur(filterSize=int(file_data['filterSize_Q']))
+    AverageBlur(filterSize=2)
     ])
 def GaussianBlur_QR(newVal):
     if newVal < 1:
@@ -192,16 +163,14 @@ def GaussianBlur_QR(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_R = newVal - 1
     pipeline_QR.blocks[0] = AverageBlur(GaussianBlur_V_R)
-cv2.createTrackbar("Gaussian_QR", "Trackbar QR", int(file_data['filterSize_Q']), 125, GaussianBlur_QR)
-
-nr = '4'
+cv2.createTrackbar("Gaussian_QR", "Trackbar QR", 1, 125, GaussianBlur_QR)
 pipeline_4 = PostProcessingPipeline([
     GetGreenChannel(),
-    AverageBlur(filterSize=int(file_data['filterSize_'+nr])),
+    AverageBlur(filterSize=5),
     IntensityPower(power=1.5,showOutput=True),
-    Threshold2(int(file_data['Threshold_'+nr]), 255, showOutput = True,outputWindowName='Threshold 4',namedWindow=True,WindName='Trackbar 4',trackbar=True),
+    Threshold2(65, 255, showOutput = True,outputWindowName='Threshold 4',namedWindow=True,WindName='Trackbar 4',trackbar=True),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(int(file_data['ThresholdContours_min_'+nr]),int(file_data['ThresholdContours_max_'+nr]) ,namedWindow=False,WindName='Trackbar 4',trackbar=True),
+    ThresholdContours2(1494, 3372,namedWindow=False,WindName='Trackbar 4',trackbar=True),
     DetectShapes(epsilon= 0.1)
     ])
 def GaussianBlur_4(newVal):
@@ -209,86 +178,18 @@ def GaussianBlur_4(newVal):
         GaussianBlur_V_R = newVal
     if newVal % 2 == 0:
         GaussianBlur_V_R = newVal - 1
-    file_data['filterSize_'+nr] = GaussianBlur_V_R
     pipeline_4.blocks[1] = AverageBlur(filterSize=GaussianBlur_V_R)
-cv2.createTrackbar("Gaussian_"+nr, "Trackbar "+nr, int(file_data['filterSize_'+nr]), 125, GaussianBlur_4) 
-
-nr = '3'
-lowerBound = file_data['lowerBound_'+nr]
-lowerBound = lowerBound.split(",")
-lowerBound = [int(lowerBound[0]),int(lowerBound[1]),int(lowerBound[2])]
-lowerBound = np.array(lowerBound)
-upperBound = file_data['upperBound_'+nr]
-upperBound = upperBound.split(",")
-upperBound = [int(upperBound[0]),int(upperBound[1]),int(upperBound[2])]
-upperBound = np.array(upperBound)
-pipeline_3 = PostProcessingPipeline([
-    AverageBlur(filterSize=int(file_data['filterSize_'+nr])),
-    ConvertBGR2HSV(),
-    HSVThreshold2(trackbar=True,WindName='Trackbar 1',namedWindow=True,lowerBound=lowerBound,upperBound=upperBound),
-    ConvertHSV2BGR(showOutput=True),
-    IntensityPower(power=1.5,showOutput=True),
-    Threshold2(int(file_data['Threshold_'+nr]), 255, showOutput = True,outputWindowName='Threshold 4',namedWindow=True,WindName='Trackbar 4',trackbar=True),
-    DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(int(file_data['ThresholdContours_min_'+nr]),int(file_data['ThresholdContours_max_'+nr]) ,namedWindow=False,WindName='Trackbar 4',trackbar=True),
-    DetectShapes(epsilon= 0.1)
-    ])
-def GaussianBlur_3(newVal):
-    if newVal < 1:
-        GaussianBlur_V_R = newVal
-    if newVal % 2 == 0:
-        GaussianBlur_V_R = newVal - 1
-    file_data['filterSize_'+nr] = GaussianBlur_V_R
-    pipeline_4.blocks[0] = AverageBlur(filterSize=GaussianBlur_V_R)
-cv2.createTrackbar("Gaussian_"+nr, "Trackbar "+nr, int(file_data['filterSize_'+nr]), 125, GaussianBlur_3) 
-
-nr = '2'
-lowerBound = file_data['lowerBound_'+nr]
-lowerBound = lowerBound.split(",")
-lowerBound = [int(lowerBound[0]),int(lowerBound[1]),int(lowerBound[2])]
-lowerBound = np.array(lowerBound)
-upperBound = file_data['upperBound_'+nr]
-upperBound = upperBound.split(",")
-upperBound = [int(upperBound[0]),int(upperBound[1]),int(upperBound[2])]
-upperBound = np.array(upperBound)
-pipeline_2 = PostProcessingPipeline([
-    AverageBlur(filterSize=int(file_data['filterSize_'+nr])),
-    ConvertBGR2HSV(),
-    HSVThreshold2(trackbar=True,WindName='Trackbar 1',namedWindow=True,lowerBound=lowerBound,upperBound=upperBound),
-    ConvertHSV2BGR(showOutput=True),
-    IntensityPower(power=1.5,showOutput=True),
-    Threshold2(int(file_data['Threshold_'+nr]), 255, showOutput = True,outputWindowName='Threshold 4',namedWindow=True,WindName='Trackbar 4',trackbar=True),
-    DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(int(file_data['ThresholdContours_min_'+nr]),int(file_data['ThresholdContours_max_'+nr]) ,namedWindow=False,WindName='Trackbar 4',trackbar=True),
-    DetectShapes(epsilon= 0.1)
-    ])
-def GaussianBlur_2(newVal):
-    if newVal < 1:
-        GaussianBlur_V_R = newVal
-    if newVal % 2 == 0:
-        GaussianBlur_V_R = newVal - 1
-    file_data['filterSize_'+nr] = GaussianBlur_V_R
-    pipeline_4.blocks[0] = AverageBlur(filterSize=GaussianBlur_V_R)
-cv2.createTrackbar("Gaussian_"+nr, "Trackbar "+nr, int(file_data['filterSize_'+nr]), 125, GaussianBlur_2) 
-
-nr = '1'
-lowerBound = file_data['lowerBound_'+nr]
-lowerBound = lowerBound.split(",")
-lowerBound = [int(lowerBound[0]),int(lowerBound[1]),int(lowerBound[2])]
-lowerBound = np.array(lowerBound)
-upperBound = file_data['upperBound_'+nr]
-upperBound = upperBound.split(",")
-upperBound = [int(upperBound[0]),int(upperBound[1]),int(upperBound[2])]
-upperBound = np.array(upperBound)
+cv2.createTrackbar("Gaussian_4", "Trackbar 4", 5, 125, GaussianBlur_4) 
 pipeline_1 = PostProcessingPipeline([
-    AverageBlur(filterSize=int(file_data['filterSize_'+nr])),
-    ConvertBGR2HSV(),
-    HSVThreshold2(trackbar=True,WindName='Trackbar 1',namedWindow=True,lowerBound=lowerBound,upperBound=upperBound),
-    ConvertHSV2BGR(showOutput=True),
+    AverageBlur(filterSize=5),
     IntensityPower(power=1.5,showOutput=True),
-    Threshold2(int(file_data['Threshold_'+nr]), 255, showOutput = True,outputWindowName='Threshold 4',namedWindow=True,WindName='Trackbar 4',trackbar=True),
+    ConvertBGR2HSV(),
+    HSVThreshold2(trackbar=True,WindName='Trackbar 1',namedWindow=True),
+    ConvertHSV2BGR(showOutput=True),
+    GetGreenChannel(),
+    Closing((5,5),5),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(int(file_data['ThresholdContours_min_'+nr]),int(file_data['ThresholdContours_max_'+nr]) ,namedWindow=False,WindName='Trackbar 4',trackbar=True),
+    ThresholdContours2(1494, 3372,namedWindow=False,WindName='Trackbar 1',trackbar=True),
     DetectShapes(epsilon= 0.1)
     ])
 def GaussianBlur_1(newVal):
@@ -296,9 +197,46 @@ def GaussianBlur_1(newVal):
         GaussianBlur_V_R = newVal
     if newVal % 2 == 0:
         GaussianBlur_V_R = newVal - 1
-    file_data['filterSize_'+nr] = GaussianBlur_V_R
-    pipeline_4.blocks[0] = AverageBlur(filterSize=GaussianBlur_V_R)
-cv2.createTrackbar("Gaussian_"+nr, "Trackbar "+nr, int(file_data['filterSize_'+nr]), 125, GaussianBlur_1) 
+    pipeline_1.blocks[0] = AverageBlur(GaussianBlur_V_R)    
+cv2.createTrackbar("Gaussian_1", "Trackbar 1", 5, 125, GaussianBlur_1)
+pipeline_2 = PostProcessingPipeline([
+    AverageBlur(filterSize=5),
+    IntensityPower(power=1.5,showOutput=True),
+    ConvertBGR2HSV(),
+    HSVThreshold2(trackbar=True,WindName='Trackbar 2',namedWindow=True),
+    ConvertHSV2BGR(showOutput=True),
+    GetGreenChannel(),
+    Closing((5,5),5),
+    DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
+    ThresholdContours2(1494, 3372,namedWindow=False,WindName='Trackbar 2',trackbar=True),
+    DetectShapes(epsilon= 0.1)
+    ])
+def GaussianBlur_2(newVal):
+    if newVal < 1:
+        GaussianBlur_V_R = newVal
+    if newVal % 2 == 0:
+        GaussianBlur_V_R = newVal - 1
+    pipeline_2.blocks[0] = AverageBlur(GaussianBlur_V_R)    
+cv2.createTrackbar("Gaussian_2", "Trackbar 2", 5, 125, GaussianBlur_2)
+pipeline_3 = PostProcessingPipeline([
+    AverageBlur(filterSize=5),
+    IntensityPower(power=1.5,showOutput=True),
+    ConvertBGR2HSV(),
+    HSVThreshold2(trackbar=True,WindName='Trackbar 3',namedWindow=True),
+    ConvertHSV2BGR(showOutput=True),
+    GetGreenChannel(),
+    Closing((5,5),5),
+    DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
+    ThresholdContours2(1494, 3372,namedWindow=False,WindName='Trackbar 3',trackbar=True),
+    DetectShapes(epsilon= 0.1)
+    ])
+def GaussianBlur_3(newVal):
+    if newVal < 1:
+        GaussianBlur_V_R = newVal
+    if newVal % 2 == 0:
+        GaussianBlur_V_R = newVal - 1
+    pipeline_3.blocks[0] = AverageBlur(GaussianBlur_V_R)    
+cv2.createTrackbar("Gaussian_3", "Trackbar 3", 5, 125, GaussianBlur_3)
 
 def PipeRes(frame):
     pipeRes = [0,0,0,0]
@@ -315,42 +253,53 @@ def PipeRes(frame):
             if s.points == 4:
                 cv2.drawContours(shapeImg, [s.contour], -1, (0, 255, 0), 4)
                 Firkan_Liste.append([m1,s.center,s.contour])
+                break
         cv2.imshow("Shapes "+str(m1), shapeImg)
         m1 +=1
     return Firkan_Liste
 
 
 
-
-
-
-
-Robot_o = QR.Omregning(file_data['file_QR'])
-cap = OAKCamColorDepth(900,800)
+TCP = Internetkommunikation.TCP_pi_Server(HOST='',PORT=5120)
+F1 = 0
+F2 = 0
+F3 = 0
+Robot_o = QR.Omregning('QR.txt')
+cap = OAKCamColorDepth(1920,1080)
 qr = True
-qr2 = True
-Firkan = False
-tcp_PI = False
+qr2 = False
+Firkan = True
+tcp_IP = False
+
+if tcp_IP:
+    TCP.TCP_Aben()
+
 while(True):
     frame = cap.getPreviewFrame()
-    
+    frame = Robot_o.Rotering(frame)
+    print('')
     if qr:
         
+        if tcp_IP:
+            Besked = TCP.TCP_Modtaget()
+            if Besked == 'q':
+                break
+            elif Besked == 't':
+                cap.triggerAutoFocus()
+            elif Besked == 'a':
+                cap.startContinousAutoFocus()
+            
+
         while(True):
             
-            frame = cap.getPreviewFrame()
-            #pipeline_QR.run(frame.copy())
-            Data_QR,Robot = QR.QR(frame)
-            cv2.imshow("QR", frame)
+            frame_QR = cap.getPreviewFrame()
+            frame_QR = pipeline_QR.run(frame_QR.copy())
+            frame_QR,Break= Robot_o.Nulstilling(frame_QR)
+            cv2.imshow("QR", frame_QR)
             key = cv2.waitKey(100)
-            m2 = 0
-            for m in Robot:
-                m2+=1
-                if m2 >=3:
-                    break
-            if m2 >=3:
+            if Break:
                 break
-        Robot_o.Nulstilling(Robot)
+        
         qr = False
 
     if qr2:
@@ -367,17 +316,45 @@ while(True):
 
     if Firkan:
         Firkan_cm = []
-        frame = cap.getPreviewFrame()
         Firkan_Liste = PipeRes(frame.copy())
+        frame_Firkan =frame.copy()
         for f in Firkan_Liste:
-            XY = Robot_o.Omregning_V(f[1])
-            print('CM:',XY,' P:',f[1],' F:',f[0])
-            Firkan_cm.append(XY,V,f[0]) 
+            XY , V , frame_Firkan = Robot_o.Omregning_V(f[2],frame_Firkan)
+            print('CM:',XY,' P:',f[1],'V:',V,' F:',f[0])
+            Firkan_cm.append([XY,V,f[0]]) 
+        cv2.imshow("Firkan", frame_Firkan)
+        frame = frame_Firkan
 
-    if tcp_PI:
-        TCP.TCP_Aben()
-        Besked = TCP.TCP_Modtaget()
-        TCP.TCP_Send('0')
+    if tcp_IP:
+        M2 = [0,0,0,0,0,0]
+        M = str(M2[0])+','+str(M2[1])+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+',0'
+        F1_ = False
+        F2_ = False
+        F3_ = False
+        for F_cm in Firkan_cm:
+            if F_cm[2] == 1:
+                F1_ = True
+            if F_cm[2] == 2:
+                F2_ = True
+            if F_cm[2] == 3:
+                F3_ = True
+        F1_3 = F1_ and ((F2_==False or F1 <= F2) and (F3_==False or F1 <= F3))
+        F2_3 = F2_ and ((F1_==False or F2 < F1) and (F3_==False or F2 <= F3))
+        F3_3 = F3_ and ((F1_==False or F3 < F1) and (F2_==False or F3 < F2))
+        for F_cm in Firkan_cm:
+            if F1_3 and F_cm[2] == 1:
+                M  = str(F1_3[0][0]/100)+','+str(F1_3[0][1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+str(F1_3[2])
+                break
+            if F2_3 and F_cm[2] == 2:
+                M  = str(F1_3[0][0]/100)+','+str(F1_3[0][1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+str(F1_3[2])
+                break
+            if F3_3 and F_cm[2] == 3:
+                M  = str(F1_3[0][0]/100)+','+str(F1_3[0][1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+str(F1_3[2])
+                break
+            if F_cm[2] >= 4 and F1_ == False and F2_ == False and F3_ == False:
+                M  = str(F1_3[0][0]/100)+','+str(F1_3[0][1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+str(F1_3[2])
+                break
+        TCP.TCP_Send(M)
 
     cv2.imshow("frame", frame)
 
@@ -389,6 +366,7 @@ while(True):
     elif k == ord('a'):
         cap.startContinousAutoFocus()
 
-
+TCP.TCP_Luk()
+TCP.TCP_Luk_Luk()
 cv2.destroyAllWindows()
 cv2.destroyAllWindows()
