@@ -1,0 +1,103 @@
+ Program
+   BeforeStart
+     Loop 2 times
+       MoveJ
+         Top_Right
+         Wait: 2.0
+         Top_Left
+         Wait: 2.0
+         Bottom_Left
+         Wait: 2.0
+         Bottom_Right
+         Wait: 2.0
+     Loop
+       conres = socket_open("192.168.137.1",23)
+       textmsg(conres)
+       If conres ≟  True 
+         break
+     targetPos=p[0, 0, 0, 0, 0, 0]
+     receiveFromServ=[0, 0, 0, 0, 0, 0, 0, 0]
+     MoveJ
+       Waypoint_1
+     Kalibrer="Kalibrering"
+     socket_send_string(Kalibrer)
+     Loop conres≟ True 
+       KaliSlut=socket_read_ascii_float(1)
+       textmsg(KaliSlut)
+       If KaliSlut[1]≟100
+         break
+   Robot Program
+     Set gribe=Off
+     MoveJ
+       Waypoint_1
+     sendToServer="Klar"
+     socket_send_string(sendToServer)
+     Loop conres≟ True 
+       receiveFromServ=socket_read_ascii_float(7)
+       textmsg(receiveFromServ)
+       If receiveFromServ[7]≟1
+         break
+       ElseIf receiveFromServ[7]≟2
+         break
+       ElseIf receiveFromServ[7]≟3
+         break
+       ElseIf receiveFromServ[7]≟4
+         break
+     Loop
+       targetPos=p[receiveFromServ[1],receiveFromServ[2],receiveFromServ[3],receiveFromServ[4],receiveFromServ[5],receiveFromServ[6]]
+       textmsg(targetPos)
+       If targetPos≠p[0, 0, 0, 0, 0, 0]
+         MoveL
+           targetPos
+         break
+     Set gribe= True 
+     Wait: 2.0
+     MoveJ
+       Waypoint_1
+     Wait: 2.0
+     If receiveFromServ[7]≟1
+       If Red≟0
+         MoveJ
+           Red_Storage
+           Set gribe= False 
+           Wait: 1.0
+           Set Red=Red+1
+       ElseIf Red≠0
+         MoveJ
+           Red_Storage_2
+           Set gribe= False 
+           Wait: 1.0
+     ElseIf receiveFromServ[7]≟2
+       If Green≟0
+         MoveJ
+           Green_Storage
+           Set gribe= False 
+           Wait: 1.0
+           Set Green=Green+1
+       ElseIf Green≠0
+         MoveJ
+           Green_Storage_2
+           Set gribe= False 
+           Wait: 1.0
+     ElseIf receiveFromServ[7]≟3
+       If Blue≟0
+         MoveJ
+           Blue_Storage
+           Set gribe= False 
+           Wait: 1.0
+           Set Blue=Blue+1
+       ElseIf Blue≠0
+         MoveJ
+           Blue_Storage_2
+           Set gribe= False 
+           Wait: 1.0
+     ElseIf receiveFromServ[7]≟4
+       MoveJ
+         Skrald
+         Set gribe= False 
+         Wait: 1.0
+     Wait: 1.0
+     targetPos=p[0, 0, 0, 0, 0, 0]
+     MoveL
+       Waypoint_3
+       Waypoint_1
