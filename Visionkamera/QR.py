@@ -127,10 +127,11 @@ class Omregning:
         file = open(navn , "r")     
         data5 = file.read().split("\n")
         self.angle = 0
-        
+        self.rotering = [0,0,0,0]
+        self.nulstilling = False
         for nr in data5:
             data4 = nr.split(",")
-            self.Robotnr[int(data4[0])] = [int(data4[1])/100,int(data4[2])/100]
+            self.Robotnr[int(data4[0])] = [float(data4[1]),float(data4[2])]
         print('Robotnr',self.Robotnr)
       
     def Nulstilling(self,img):
@@ -164,36 +165,72 @@ class Omregning:
                     RO_B_CM_Y = Robotnr[m2[0]][1]
                     CM_Y = RO_A_CM_Y - RO_B_CM_Y
                     CM_X = RO_A_CM_X - RO_B_CM_X
-                    #print (CM_Y,CM_X)
+                    print (CM_Y,CM_X)
                     P_C = RO_A_P_Y - RO_B_P_Y
                     P_B = RO_A_P_X - RO_B_P_X
                     P_A = ((P_B)**2+(P_C)**2)**0.5
-                    #print('P_A',P_A,'P_B',P_B,'P_C',P_C)
-                    V_A = math.tan( P_C / P_B )*180/math.pi
+                    print('P_A',P_A,'P_B',P_B,'P_C',P_C)
+                    print()
                     if  RO_A_CM_X ==  RO_B_CM_X:
+                        V_A = math.tan( P_B / P_C )*180/math.pi
+                        V_B = math.tan( P_C / P_B  )*180/math.pi
+                        print('A',V_A,'B',V_B)
+                        
+
                         if CM_Y >=0:
-                            if P_B >=0:
-                                self.angle = (V_A)-90
+                            if V_A >= V_B:
+                                self.angle = V_A
                                 Break = True
-                                #print('0 angle A:',V_A,'angle:',self.angle)
+                                print('0 angle A:',V_A,'angle:',self.angle)
+                                break
+                            elif V_A < V_B:
+                                self.angle = V_B
+                                Break = True
+                                print('1 angle A:',V_A,'angle:',self.angle)
+                                break
+                            '''
+
+                            V_A = math.tan( P_C/P_B  )*180/math.pi
+
+                            if P_B >=0:
+                                V_A = math.tan( P_B / P_C )*180/math.pi
+                                self.angle = V_A
+                                Break = True
+                                print('0 angle A:',V_A,'angle:',self.angle)
                                 break
                             elif P_B <0:
-                                self.angle = V_A*-1+180-90
+                                V_A = math.tan( P_B / P_C )*180/math.pi
+                                self.angle = -V_A
                                 Break = True
-                                #print('1 angle A:',V_A,'angle:',self.angle)
+                                print('1 angle A:',V_A,'angle:',self.angle)
                                 break
-
+                            '''
                         elif CM_Y <0:
+                            if V_A >= V_B:
+                                self.angle = -V_A +90
+                                Break = True
+                                print('2 angle A:',V_A,'angle:',self.angle)
+                                break
+                            elif V_A < V_B:
+                                self.angle = -V_B +90
+                                Break = True
+                                print('3 angle A:',V_A,'angle:',self.angle)
+                                break
+                            '''
+
+
                             if P_B >=0:
+                                V_A = math.tan( P_B / P_C )*180/math.pi
                                 self.angle = V_A-90
                                 Break = True
-                                #print('2 angle A:',V_A,'angle:',self.angle)
+                                print('2 angle A:',V_A,'angle:',self.angle)
                                 break
                             elif P_B <0:
-                                self.angle = V_A*-1-90
+                                V_A = math.tan( P_B / P_C )*180/math.pi
+                                self.angle = -V_A
                                 Break = True
-                                #print('3 angle A:',V_A,'angle:',self.angle)
-                                break
+                                print('3 angle A:',V_A,'angle:',self.angle)
+                                break'''
                     nr2 +=1
             nr1 +=1
         QR_img = self.Rotering(img.copy())
@@ -217,6 +254,8 @@ class Omregning:
                         #print(Robotnr[m1[0]],'-',Robotnr[m2[0]])
                         #print('M1 - M2')
                         QR_img = cv2.line(QR_img,m2[1],m1[1],(0,0,255),4)
+                        self.rotering[0] = m2[1]
+                        self.rotering[1] = m1[1]
                         Break1 = True
                         print(m2[1][1],m1[1][1],Robotnr[m2[0]][1],Robotnr[m1[0]][1])
                         F = m2[1][1]-m1[1][1]
@@ -234,6 +273,8 @@ class Omregning:
                         #print(Robotnr[m1[0]],'-',Robotnr[m2[0]])
                         #print('M1 - M2')
                         QR_img = cv2.line(QR_img,m2[1],m1[1],(0,255,0),4)
+                        self.rotering[2] = m2[1]
+                        self.rotering[3] = m1[1]
                         Break2 = True
                         print(m2[1][0],m1[1][0],Robotnr[m2[0]][0],Robotnr[m1[0]][0])
                         F = m2[1][0]-m1[1][0]
@@ -250,13 +291,14 @@ class Omregning:
         Break = False
         if Break1 and Break2:
             print(self.Robot_O)
+            self.nulstilling = True
             Break = True
         print('')
         return QR_img,Break
 
     def Omregning(self,P_XY,img):
-        cm_y = self.Robot_O[1] + P_XY[0] * self.Robot_O[0]
-        cm_X = self.Robot_O[3] + P_XY[1] * self.Robot_O[2]
+        cm_X = self.Robot_O[1] + P_XY[0] * self.Robot_O[0]
+        cm_y = self.Robot_O[3] + P_XY[1] * self.Robot_O[2]
         print('cm_X',cm_X,'=',self.Robot_O[1],'+',P_XY[1],'*',self.Robot_O[0])
         print('cm_Y',cm_y,'=',self.Robot_O[3],'+',P_XY[0],'*',self.Robot_O[2])
         cv2.putText(img,'X:'+str(int(cm_X*100)/100),(P_XY[0],P_XY[1]+25),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0),2 )
@@ -269,6 +311,12 @@ class Omregning:
         scale = 1.0
         M = cv2.getRotationMatrix2D(center, self.angle, scale)
         rotated = cv2.warpAffine(img, M, (w, h))
+        if self.nulstilling:
+            rotated = cv2.line(rotated,self.rotering[0],self.rotering[1],(0,0,255),4)
+            rotated = cv2.line(rotated,self.rotering[2],self.rotering[3],(0,255,0),4)
+        else:
+            print('Rotering XY')
+
         
         return rotated
     
@@ -283,6 +331,7 @@ class Omregning:
 
     def Omregning_V(self,P_XY,img):
         #print(P_XY)
+        p_cm = (self.Robot_O[0]+self.Robot_O[2])/2
         X = P_XY[0][0][0] + ((P_XY[2][0][0] - P_XY[0][0][0])/2)
         Y = P_XY[1][0][1] + ((P_XY[3][0][1] - P_XY[1][0][1])/2)
         XY = int(X),int(Y)
@@ -300,6 +349,7 @@ class Omregning:
             V = math.sin( M1 / Px )*180/math.pi
             print(M1,M2,Px,V,'1')
         cv2.putText(img,'V:'+str(int(V*10)/10),(XY[0],XY[1]+75),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0),2 )
+        cv2.putText(img,'cm X:'+str(int(Px*p_cm*10)/10)+' Y:'+str(int(Py*p_cm*10)/10),(XY[0],XY[1]+100),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0),2 )
         return CM_XY,V,img
 
 class file:

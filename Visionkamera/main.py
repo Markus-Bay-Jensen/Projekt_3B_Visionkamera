@@ -1,9 +1,9 @@
 from States import Opstart
-from CustomStateMachine import *
+from statemachine import *
 import cv2
 
 startingState = Opstart()
-sm = MyStateMachine(startingState)
+sm = StateMachine(startingState)
 sm.Run()
 
 print("Program closed!")
