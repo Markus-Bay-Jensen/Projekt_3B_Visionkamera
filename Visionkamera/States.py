@@ -6,6 +6,7 @@ from IMPP import *
 import QR
 import Internetkommunikation
 from pipeline import *
+import math
 
 class start:
     TCP = Internetkommunikation.TCP_pi_Server(HOST='',PORT=23)
@@ -64,16 +65,19 @@ class Shape_Detection(State):
     def Execute(self):
         frame = F.cap.getPreviewFrame()
         frame = F.Robot_o.Rotering(frame)
-        Firkan_cm = []
+        Firkan_2 = []
         Firkan_Liste = PipeRes(frame.copy())
         frame_Firkan =frame.copy()
         for f in Firkan_Liste:
             #print('Firkan_Liste',f)
-            print(' F:',f[0],' P:',f[1])
-            Firkan_cm.append([f[2],f[0]])
+            print(' P:',f[1].points,' F:',f[0])
+            if f[1].points == 4:
+                Firkan_2.append([f[1].approx,f[0]])
+                print('P:',f[1].points,' F:',f[0])
             #cv2.drawContours(frame_Firkan, [f.contour], -1, (0, 255, 0), 2)
+        frame_Firkan = F.Robot_o.Rotering_m(frame_Firkan)    
         cv2.imshow("Firkan", frame_Firkan)
-        self.stateMachine.ChangeState(Databehandlin_Konttrol(Firkan_cm,img=frame_Firkan))
+        self.stateMachine.ChangeState(Databehandlin_Konttrol(Firkan_2,img=frame_Firkan))
 
 class Databehandlin_Konttrol(State):
     def __init__(self,frame,img) -> None:
@@ -87,7 +91,7 @@ class Databehandlin_Konttrol(State):
         #print('frame',self.frame)
 
     def Execute(self):
-        M2 = [-0.23339,0.02856,0.2481,0,3.0765,0,4]
+        M2 = [-0.374,0.08105,0.014,3.11,0,0,4]
         M = '['+str(M2[0])+','+str(M2[1])+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+',4]'
         M3 = M
         F1_ = False
@@ -106,35 +110,39 @@ class Databehandlin_Konttrol(State):
         for F_cm in self.frame:
             if F1_3 and F_cm[1] == 1:
                 F.F1 += 1
-                XY , V , self.img = F.Robot_o.Omregning_V(F_cm[0],self.img)
+                XY , V , self.img = F.Robot_o.Omregning_V(F_cm[0],self.img,'1')
                 print('F:',F_cm[1],'X:',XY[0],'Y:',XY[1],'V:',V)
+                RV = V/180*math.pi
                 cv2.imshow("Firkan", self.img)
-                M = '['+str(XY[0]/100)+','+str(XY[1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+ str(F_cm[1]) +']'
+                M = '['+str(XY[0]/100)+','+str(XY[1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(RV)+','+str(M2[5])+','+ str(F_cm[1]) +']'
                 break
             if F2_3 and F_cm[1] == 2:
                 F.F2 += 1
-                XY , V , self.img = F.Robot_o.Omregning_V(F_cm[0],self.img)
+                XY , V , self.img = F.Robot_o.Omregning_V(F_cm[0],self.img,'2')
                 print('F:',F_cm[1],'X:',XY[0],'Y:',XY[1],'V:',V)
+                RV = V/180*math.pi
                 cv2.imshow("Firkan", self.img)
-                M = '['+str(XY[0]/100)+','+str(XY[1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+ str(F_cm[1]) +']'
+                M = '['+str(XY[0]/100)+','+str(XY[1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(RV)+','+str(M2[5])+','+ str(F_cm[1]) +']'
                 break
             if F3_3 and F_cm[1] == 3:
                 F.F3 += 1
-                XY , V , self.img = F.Robot_o.Omregning_V(F_cm[0],self.img)
+                XY , V , self.img = F.Robot_o.Omregning_V(F_cm[0],self.img,'3')
                 print('F:',F_cm[1],'X:',XY[0],'Y:',XY[1],'V:',V)
+                RV = V/180*math.pi
                 cv2.imshow("Firkan", self.img)
-                M = '['+str(XY[0]/100)+','+str(XY[1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+ str(F_cm[1]) +']'
+                M = '['+str(XY[0]/100)+','+str(XY[1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(RV)+','+str(M2[5])+','+ str(F_cm[1]) +']'
                 break
             if F_cm[1] >= 4 and F1_ == False and F2_ == False and F3_ == False:
-                XY , V , self.img = F.Robot_o.Omregning_V(F_cm[0],self.img)
+                XY , V , self.img = F.Robot_o.Omregning_V(F_cm[0],self.img,'4')
                 print('F:',F_cm[1],'X:',XY[0],'Y:',XY[1],'V:',V)
+                RV = V/180*math.pi
                 cv2.imshow("Firkan", self.img)
-                M = '['+str(XY[0]/100)+','+str(XY[1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+','+ str(F_cm[1]) +']'
+                M = '['+str(XY[0]/100)+','+str(XY[1]/100)+','+str(M2[2])+','+str(M2[3])+','+str(RV)+','+str(M2[5])+','+ str(F_cm[1]) +']'
                 break
         if M != M3:
             self.stateMachine.ChangeState(Serd_data_to_client(M))
         else:
-            cv2.waitKey(2000)
+            cv2.waitKey(500)
             self.stateMachine.ChangeState(Shape_Detection())
 
 class Serd_data_to_client(State):

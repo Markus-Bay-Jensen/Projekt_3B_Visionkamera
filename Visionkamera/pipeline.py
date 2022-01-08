@@ -3,13 +3,29 @@ import numpy as np
 from OAKWrapper import *
 from IMPP import *
 import QR
+cv2.namedWindow('trackbar_1',cv2.WINDOW_FREERATIO)
+cv2.namedWindow('trackbar_2',cv2.WINDOW_FREERATIO)
+cv2.namedWindow('trackbar_3',cv2.WINDOW_FREERATIO)
+cv2.namedWindow('trackbar_4',cv2.WINDOW_FREERATIO)
+class DetectShapes2(DetectShapes):
+    def __init__(self, closed: bool = True, epsilon: float = 0.04, printResult: bool = False,WindName='trackbar',trackbar: bool = False) -> None:
+        self.printResult = printResult
+        self.closed = closed
+        self.epsilon = epsilon
+        self.WindName = WindName
+        if trackbar:
+            self.createTrackbar()
 
+    def createTrackbar(self):
+        cv2.createTrackbar("epsilon", self.WindName, int(self.epsilon*100), 1000, self.Epsilon)
 
-
-
+    def Epsilon(self, value: int):
+        if value < 0 or value > 1000:
+            return
+        self.epsilon = value/100
 
 class Threshold2(Threshold):
-    def __init__(self, lowerBound: int, upperBound: int, mode: int = cv2.THRESH_BINARY, showOutput: bool = False, outputWindowName: str = 'Threshold',trackbar: bool = False,namedWindow=True,WindName='Threshold') -> None:
+    def __init__(self, lowerBound: int, upperBound: int, mode: int = cv2.THRESH_BINARY, showOutput: bool = False, outputWindowName: str = 'Threshold',trackbar: bool = False,namedWindow=True,WindName='trackbar') -> None:
         self.showOutput = showOutput
         self.outputWindowName = outputWindowName
         self.lowerBound = lowerBound
@@ -37,7 +53,7 @@ class Threshold2(Threshold):
         self.upperBound = value
 
 class ThresholdContours2(ThresholdContours):
-    def __init__(self, minArea: float, maxArea: float, printDebug: bool = False,trackbar: bool = False,namedWindow=True,WindName='ThresholdContours') -> None:
+    def __init__(self, minArea: float, maxArea: float, printDebug: bool = False,trackbar: bool = False,namedWindow=True,WindName='trackbar') -> None:
         self.minArea = minArea
         self.maxArea = maxArea
         self.printDebug = printDebug
@@ -63,7 +79,7 @@ class ThresholdContours2(ThresholdContours):
         self.maxArea = value
 
 class HSVThreshold2(HSVThreshold):
-    def __init__(self, lowerBound: np.array = np.array([0, 0, 0]), upperBound: np.array = np.array([255, 255, 255]), trackbar: bool = False, showOutput: bool = False, outputWindowName: str = 'HSVThreshold',namedWindow=True,WindName='HSV Treshold Trackbars') -> None:
+    def __init__(self, lowerBound: np.array = np.array([0, 0, 0]), upperBound: np.array = np.array([255, 255, 255]), trackbar: bool = False, showOutput: bool = False, outputWindowName: str = 'HSVThreshold',WindName='trackbar') -> None:
         self.showOutput = showOutput
         self.outputWindowName = outputWindowName
         self.lowerBound = lowerBound
@@ -71,10 +87,8 @@ class HSVThreshold2(HSVThreshold):
         self.WindName = WindName
         if trackbar:
             self.createTrackbar()
-        self.namedWindow = namedWindow
 
     def createTrackbar(self):
-        #if self.namedWindow:
         cv2.namedWindow(self.WindName)
         cv2.createTrackbar("HSV_LBH", self.WindName, self.lowerBound[0], 255, self.setLBH)
         cv2.createTrackbar("HSV_UBH", self.WindName, self.upperBound[0], 255, self.setUBH)
@@ -113,7 +127,7 @@ class Dilate(PostProcessingBlock):
             cv2.imshow(self.outputWindowName, output)
         return output
 class Closing(PostProcessingBlock):
-    def __init__(self,kernel,iterations, showOutput = True, outputWindowName = 'Closing') -> None:
+    def __init__(self,kernel,iterations, showOutput = False, outputWindowName = 'Closing') -> None:
         self.showOutput = showOutput
         self.outputWindowName = outputWindowName
         self.kernel = kernel
@@ -148,17 +162,10 @@ class Opening(PostProcessingBlock):
         if self.showOutput:
             cv2.imshow(self.outputWindowName, output)
         return output
-cv2.namedWindow('Trackbar QR2')
-cv2.namedWindow('Trackbar 1')
-cv2.namedWindow('Trackbar 2')
-cv2.namedWindow('Trackbar 3')
-cv2.namedWindow('Trackbar 4')
+
 pipeline_QR = PostProcessingPipeline([
     ConvertBGR2Gray(),
     AverageBlur(filterSize=1),
-    #LaplacianSharpen()
-    #UnsharpMasking()
-    #Sobel4()
     Threshold(220,255)
     ])
 def GaussianBlur_QR(newVal):
@@ -167,18 +174,18 @@ def GaussianBlur_QR(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_R = newVal - 1
     pipeline_QR.blocks[1] = AverageBlur(GaussianBlur_V_R)
-cv2.createTrackbar("Gaussian_QR", "Trackbar QR2", 1, 125, GaussianBlur_QR)
+
 pipeline_4 = PostProcessingPipeline([
     AverageBlur(filterSize=5),
     IntensityPower(power=1.5,showOutput=False),
     ConvertBGR2HSV(),
-    HSVThreshold2(lowerBound = np.array([0,34,38]),upperBound=np.array([99,255,254]),trackbar=True,WindName='Trackbar 4',namedWindow=True),
-    ConvertHSV2BGR(showOutput=False),
-    GetGreenChannel(),
+    HSVThreshold2(lowerBound = np.array([0,34,38]),upperBound=np.array([99,255,254]),trackbar= True,WindName='trackbar_4'),
+    ConvertHSV2BGR(),
+    ConvertBGR2Gray(showOutput=True, outputWindowName='trackbar_4'),
     Closing((5,5),5),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(5656, 100000,namedWindow=False,WindName='Trackbar 4',trackbar=False),
-    DetectShapes(epsilon= 0.1)
+    ThresholdContours2(5656, 100000,namedWindow=False,trackbar= True,WindName='trackbar_4'),
+    DetectShapes2(epsilon= 0.1,trackbar= True,WindName='trackbar_4')
     ])
 def GaussianBlur_4(newVal):
     if newVal < 1:
@@ -186,18 +193,18 @@ def GaussianBlur_4(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_R = newVal - 1
     pipeline_4.blocks[0] = AverageBlur(filterSize=GaussianBlur_V_R)
-cv2.createTrackbar("Gaussian_4", "Trackbar 4", 5, 125, GaussianBlur_4) 
+
 pipeline_1 = PostProcessingPipeline([
-    AverageBlur(filterSize=23),
+    AverageBlur(filterSize=5),
     IntensityPower(power=1.5,showOutput=False),
     ConvertBGR2HSV(),
-    HSVThreshold2(lowerBound = np.array([0,229,159]),upperBound=np.array([87,243,255]),trackbar=True,WindName='Trackbar 1',namedWindow=True),
-    ConvertHSV2BGR(showOutput=False),
-    GetGreenChannel(),
+    HSVThreshold2(lowerBound = np.array([0,34,38]),upperBound=np.array([99,255,254]),trackbar= True,WindName='trackbar_1'),
+    ConvertHSV2BGR(),
+    ConvertBGR2Gray(showOutput=True, outputWindowName='trackbar_1'),
     Closing((5,5),5),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(10007, 18637,namedWindow=False,WindName='Trackbar 1',trackbar=False),
-    DetectShapes(epsilon= 0.1)
+    ThresholdContours2(5656, 100000,namedWindow=False,trackbar= True,WindName='trackbar_1'),
+    DetectShapes2(epsilon= 0.1,trackbar= True,WindName='trackbar_1')
     ])
 def GaussianBlur_1(newVal):
     if newVal < 1:
@@ -205,18 +212,18 @@ def GaussianBlur_1(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_R = newVal - 1
     pipeline_1.blocks[0] = AverageBlur(GaussianBlur_V_R)    
-cv2.createTrackbar("Gaussian_1", "Trackbar 1", 5, 125, GaussianBlur_1)
+
 pipeline_2 = PostProcessingPipeline([
-    AverageBlur(filterSize=15),
+    AverageBlur(filterSize=5),
     IntensityPower(power=1.5,showOutput=False),
     ConvertBGR2HSV(),
-    HSVThreshold2(lowerBound = np.array([89,65,201]),upperBound=np.array([154,255,223]),trackbar=True,WindName='Trackbar 2',namedWindow=True),
-    ConvertHSV2BGR(showOutput=False),
-    GetGreenChannel(),
+    HSVThreshold2(lowerBound = np.array([0,34,38]),upperBound=np.array([99,255,254]),trackbar= True,WindName='trackbar_2'),
+    ConvertHSV2BGR(),
+    ConvertBGR2Gray(showOutput=True, outputWindowName='trackbar_2'),
     Closing((5,5),5),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(18419, 28934,namedWindow=False,WindName='Trackbar 2',trackbar=False),
-    DetectShapes(epsilon= 0.1)
+    ThresholdContours2(5656, 100000,namedWindow=False,trackbar= True,WindName='trackbar_2'),
+    DetectShapes2(epsilon= 0.1,trackbar= True,WindName='trackbar_2')
     ])
 def GaussianBlur_2(newVal):
     if newVal < 1:
@@ -224,18 +231,18 @@ def GaussianBlur_2(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_R = newVal - 1
     pipeline_2.blocks[0] = AverageBlur(GaussianBlur_V_R)    
-cv2.createTrackbar("Gaussian_2", "Trackbar 2", 5, 125, GaussianBlur_2)
+
 pipeline_3 = PostProcessingPipeline([
-    AverageBlur(filterSize=5),
+    AverageBlur(filterSize=10),
     IntensityPower(power=1.5,showOutput=False),
     ConvertBGR2HSV(),
-    HSVThreshold2(lowerBound = np.array([64,35,103]),upperBound=np.array([87,230,140]),trackbar=True,WindName='Trackbar 3',namedWindow=True),
-    ConvertHSV2BGR(showOutput=False),
-    GetGreenChannel(),
+    HSVThreshold2(lowerBound = np.array([0,34,38]),upperBound=np.array([99,255,254]),trackbar= True,WindName='trackbar_3'),
+    ConvertHSV2BGR(),
+    ConvertBGR2Gray(showOutput=True, outputWindowName='trackbar_3'),
     Closing((5,5),5),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(8920, 16896,namedWindow=False,WindName='Trackbar 3',trackbar=False),
-    DetectShapes(epsilon= 0.1)
+    ThresholdContours2(5656, 100000,namedWindow=False,trackbar= True,WindName='trackbar_3'),
+    DetectShapes2(epsilon= 0.1,trackbar= True,WindName='trackbar_3')
     ])
 def GaussianBlur_3(newVal):
     if newVal < 1:
@@ -243,7 +250,11 @@ def GaussianBlur_3(newVal):
     if newVal % 2 == 0:
         GaussianBlur_V_R = newVal - 1
     pipeline_3.blocks[0] = AverageBlur(GaussianBlur_V_R)    
-cv2.createTrackbar("Gaussian_3", "Trackbar 3", 5, 125, GaussianBlur_3)
+
+cv2.createTrackbar("Gaussian", "trackbar_1", pipeline_1.blocks[0].filterSize, 125, GaussianBlur_1)
+cv2.createTrackbar("Gaussian", "trackbar_2", pipeline_2.blocks[0].filterSize, 125, GaussianBlur_2)
+cv2.createTrackbar("Gaussian", "trackbar_3", pipeline_3.blocks[0].filterSize, 125, GaussianBlur_3)
+cv2.createTrackbar("Gaussian", "trackbar_4", pipeline_4.blocks[0].filterSize, 125, GaussianBlur_4)
 
 def PipeRes(frame):
     pipeRes = [0,0,0,0]
@@ -256,13 +267,12 @@ def PipeRes(frame):
     for m in pipeRes:
         shapeImg = frame.copy()
         for s in m:
+            print(s)
             cv2.drawContours(shapeImg, [s.contour], -1, (0, 0, 150), 1)
             if s.points == 4:
                 cv2.drawContours(shapeImg, [s.contour], -1, (0, 255, 0), 4)
-                Firkan_Liste.append([m1,s.center,s.contour])
+                Firkan_Liste.append([m1,s])
                 break
-        cv2.imshow("Shapes "+str(m1), shapeImg)
+        
         m1 +=1
     return Firkan_Liste
-
-

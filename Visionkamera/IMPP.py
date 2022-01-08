@@ -142,9 +142,11 @@ class IntensityPower(PostProcessingBlock):
 # Blurring
 class AverageBlur(CustomKernel):
     def __init__(self, filterSize, showOutput = False, outputWindowName = 'AverageBlur') -> None:
+        self.filterSize = filterSize
         self.kernel = np.ones((filterSize,filterSize), np.float32)/(filterSize*filterSize)
         self.showOutput = showOutput
         self.outputWindowName = outputWindowName
+        
 
 class GaussianBlur(CustomKernel):
     def __init__(self, filterSize, showOutput = False, outputWindowName = 'GaussianBlur') -> None:
