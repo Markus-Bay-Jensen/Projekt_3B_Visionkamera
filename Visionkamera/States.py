@@ -48,14 +48,14 @@ class Server_listening(State):
     def Execute(self):
         mm = cv2.waitKey(100)
         self.Besked = F.TCP.TCP_Modtaget()
-        print(self.Besked) 
-        if self.Besked == 'TCP_Luk':
+        print(self.Besked,'waitKey',mm) 
+        if self.Besked == 'TCP_Luk' or self.Besked == ''or mm == ord('t'):
             self.stateMachine.ChangeState(TCP_Connection())
         if self.Besked == 'Klar':
             self.stateMachine.ChangeState(Shape_Detection())
-        if self.Besked == 'q' or mm == 'q':
+        if self.Besked == 'q' or mm == ord('q'):
             self.stateMachine.ChangeState(Close_Program())
-        if self.Besked == 'Kalibrering':
+        if self.Besked == 'Kalibrering'or mm == ord('k'):
             self.stateMachine.ChangeState(Kalibrering_QR())
 
 class Shape_Detection(State):
