@@ -17,13 +17,14 @@ class start:
     F3 = 0
 
 F = start
+
 class Opstart(State):
     def Enter(self):
         print()
         print('Opstart')
 
     def Execute(self):
-        print
+        print()
         self.stateMachine.ChangeState(TCP_Connection())
 
 class TCP_Connection(State):
@@ -48,7 +49,7 @@ class Server_listening(State):
         mm = cv2.waitKey(100)
         self.Besked = F.TCP.TCP_Modtaget()
         print(self.Besked) 
-        if False:
+        if self.Besked == 'TCP_Luk':
             self.stateMachine.ChangeState(TCP_Connection())
         if self.Besked == 'Klar':
             self.stateMachine.ChangeState(Shape_Detection())
@@ -91,9 +92,10 @@ class Databehandlin_Konttrol(State):
         #print('frame',self.frame)
 
     def Execute(self):
-        M2 = [-0.374,0.08105,0.014,3.11,0,0,4]
+        M2 = [-0.374,0.08105,0.008,3.11,0,0,4]
         M = '['+str(M2[0])+','+str(M2[1])+','+str(M2[2])+','+str(M2[3])+','+str(M2[4])+','+str(M2[5])+',4]'
         M3 = M
+        # Næste del er valg af hvilken farve som skal samles op
         F1_ = False
         F2_ = False
         F3_ = False
@@ -142,7 +144,7 @@ class Databehandlin_Konttrol(State):
         if M != M3:
             self.stateMachine.ChangeState(Serd_data_to_client(M))
         else:
-            cv2.waitKey(500)
+            cv2.waitKey(250)
             self.stateMachine.ChangeState(Shape_Detection())
 
 class Serd_data_to_client(State):
@@ -157,7 +159,6 @@ class Serd_data_to_client(State):
     def Execute(self):
         F.TCP.TCP_Send(self.frame)
         self.stateMachine.ChangeState(Server_listening())
-
 
 class Close_Program(State):
     def Enter(self):
@@ -182,12 +183,36 @@ class Kalibrering_QR(State):
         frame_QR = pipeline_QR.run(frame_QR.copy())
         frame_QR,Break= F.Robot_o.Nulstilling(frame_QR)
         cv2.imshow("QR", frame_QR)
+        print("hej")
         key = cv2.waitKey(500)
-        if Break:
-            F.TCP.TCP_Send('(100)')
-            self.stateMachine.ChangeState(Server_listening())
-        
-        
+        if key == ord('k'):
+            self.stateMachine.ChangeState(Kalibrering_F())
+        if key == ord('l'):
+            pass
+        else:
+            if Break:
+                F.TCP.TCP_Send('[100]')
+                self.stateMachine.ChangeState(Server_listening())
+                    
+class Kalibrering_F(State):
+    def Enter(self):
+        print()
+        print('Kalibrering_F')
 
-
+    def Execute(self):
+        frame = F.cap.getPreviewFrame()
+        frame = F.Robot_o.Rotering(frame)
+        Firkan_Liste = PipeRes(frame.copy())
+        frame_Firkan =frame.copy()
+        for f in Firkan_Liste:
+            #print('Firkan_Liste',f)
+            print(' P:',f[1].points,' F:',f[0])
+            cv2.drawContours(frame_Firkan, [f[1].approx], -1, (255, 255, 255), 5)
+            cv2.putText(frame_Firkan,'F:'+str(f[0]),(f[1].center[0],f[1].center[1]),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,0,0),2 )
+            cv2.putText(frame_Firkan,'P:'+str(f[1].points),(f[1].center[0],f[1].center[1]+25),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,0,0),2 )
+        frame_Firkan = F.Robot_o.Rotering_m(frame_Firkan)    
+        cv2.imshow("Firkan", frame_Firkan)
+        key = cv2.waitKey(100)
+        if key == ord('f'):
+            self.stateMachine.ChangeState(Kalibrering_F())
 

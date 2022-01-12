@@ -1,0 +1,242 @@
+def DoneRoboProg2():
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 0)
+  set_tool_analog_input_domain(1, 0)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  set_gravity([0.0, 0.0, 9.82])
+  set_tool_voltage(24)
+  set_tcp(p[0.0,0.0,0.245,0.0,0.0,-0.5])
+  set_payload(1.0)
+  set_safety_mode_transition_hardness(0)
+  global receiveFromServ=[7, -0.358, 0.15031, 0.014, 3.11, -0.00909, 0, 4]
+  global Green=1
+  global Red=1
+  global nest=4
+  global targetPos=p[-0.358, 0.15031, 0.014, 3.11, -0.00909, 0]
+  global i_var_1=1
+  global Blue=1
+  global current_pose=[0, 0, 0, 0, 0, 0]
+  rtde_set_watchdog("speed_slider_mask", 10.0, "ignore")
+  $ 1 "BeforeStart"
+  $ 3 "Blue≟0"
+  Blue == 0
+  $ 4 "Green≟0"
+  Green == 0
+  $ 5 "Red≟0"
+  Red == 0
+  $ 6 "Loop"
+  while (True):
+    $ 7 "conres = socket_open('192.168.137.1',23)"
+    conres = socket_open("192.168.137.1",23)
+    $ 8 "textmsg(conres)"
+    textmsg(conres)
+    $ 9 "If conres ≟  True "
+    if (conres  ==    True  ):
+      $ 10 "break"
+      break
+    end
+  end
+  $ 11 "targetPos=p[0, 0, 0, 0, 0, 0]"
+  targetPos=p[0, 0, 0, 0, 0, 0]
+  $ 12 "receiveFromServ=[0, 0, 0, 0, 0, 0, 0, 0]"
+  receiveFromServ=[0, 0, 0, 0, 0, 0, 0, 0]
+  $ 13 "MoveJ"
+  $ 14 "kamera_position"
+  movej(get_inverse_kin(p[-.241339231973, .211945005668, .608173370863, -1.563806390625, .012645984918, -.073771303320], qnear=[0.007968386635184288, -1.1627143065081995, 0.41840314865112305, -2.3230884710894983, -3.2047978083239954, 0.5349043011665344]), a=1.3962634015954636, v=1.0471975511965976)
+  $ 15 "Kalibrer='Kalibrering'"
+  Kalibrer="Kalibrering"
+  $ 16 "socket_send_string(Kalibrer)"
+  socket_send_string(Kalibrer)
+  $ 17 "Loop conres≟ True "
+  while (conres ==   True  ):
+    $ 18 "KaliSlut=socket_read_ascii_float(1)"
+    KaliSlut=socket_read_ascii_float(1)
+    $ 19 "textmsg(KaliSlut)"
+    textmsg(KaliSlut)
+    $ 20 "If KaliSlut[1]≟100"
+    if (KaliSlut[1] == 100):
+      $ 21 "break"
+      break
+    end
+  end
+  while (True):
+    $ 22 "Robot Program"
+    $ 23 "Set gribe=Off"
+    set_tool_digital_out(0, False)
+    $ 24 "MoveJ"
+    $ 25 "kamera_position"
+    movej(get_inverse_kin(p[-.241339231973, .211945005668, .608173370863, -1.563806390625, .012645984918, -.073771303320], qnear=[0.007968386635184288, -1.1627143065081995, 0.41840314865112305, -2.3230884710894983, -3.2047978083239954, 0.5349043011665344]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 26 "Wait: 1.2"
+    sleep(1.2)
+    $ 27 "sendToServer='Klar'"
+    sendToServer="Klar"
+    $ 28 "socket_send_string(sendToServer)"
+    socket_send_string(sendToServer)
+    $ 29 "Wait: 0.5"
+    sleep(0.5)
+    $ 30 "Modtaget = 'Koordinater modtaget'"
+    Modtaget = "Koordinater modtaget"
+    $ 32 "Loop conres≟ True "
+    while (conres ==   True  ):
+      $ 33 "receiveFromServ=socket_read_ascii_float(7)"
+      receiveFromServ=socket_read_ascii_float(7)
+      $ 34 "textmsg(receiveFromServ)"
+      textmsg(receiveFromServ)
+      $ 35 "If receiveFromServ[7]≟1"
+      if (receiveFromServ[7] == 1):
+        $ 36 "break"
+        break
+      else:
+        $ 37 "ElseIf receiveFromServ[7]≟2"
+        if (receiveFromServ[7] == 2):
+          $ 38 "break"
+          break
+        else:
+          $ 39 "ElseIf receiveFromServ[7]≟3"
+          if (receiveFromServ[7] == 3):
+            $ 40 "break"
+            break
+          else:
+            $ 41 "ElseIf receiveFromServ[7]≟4"
+            if (receiveFromServ[7] == 4):
+              $ 42 "break"
+              break
+            end
+          end
+        end
+      end
+    end
+    $ 43 "Loop"
+    while (True):
+      $ 44 "MoveJ"
+      $ 45 "Mellempunkt"
+      movej(get_inverse_kin(p[-.340681993551, .099741703234, .145518199017, 3.099946313764, -.000261903549, .000129042164], qnear=[-0.6405852476703089, -1.3209884802447718, 0.9035606384277344, -1.1287344137774866, -1.534248177205221, 1.430773377418518]), a=1.3962634015954636, v=1.0471975511965976)
+      $ 46 "targetPos=p[receiveFromServ[1],receiveFromServ[2],receiveFromServ[3],receiveFromServ[4],receiveFromServ[5],receiveFromServ[6]]"
+      targetPos=p[receiveFromServ[1],receiveFromServ[2],receiveFromServ[3],receiveFromServ[4],receiveFromServ[5],receiveFromServ[6]]
+      $ 47 "textmsg(targetPos)"
+      textmsg(targetPos)
+      $ 48 "If targetPos≠p[0, 0, 0, 0, 0, 0]"
+      if (targetPos != p[0, 0, 0, 0, 0, 0]):
+        $ 49 "MoveJ"
+        $ 50 "targetPos"
+        movej(targetPos, a=1.3962634015954636, v=1.0471975511965976)
+        $ 51 "break"
+        break
+      end
+    end
+    $ 52 "Set gribe= True "
+    set_tool_digital_out(0,   True  )
+    $ 53 "Wait aabenn=HI"
+    while (get_tool_digital_in(0) == False):
+      sync()
+    end
+    $ 54 "MoveJ"
+    $ 55 "Waypoint_1"
+    movej(get_inverse_kin(p[-.361802233709, .328651891631, .583926715945, -1.555115115532, -.726919945853, .411775444563], qnear=[-1.231365982686178, -1.7245586554156702, 0.9567050933837891, -2.2371462027179163, -1.1994426886187952, 0.29240909218788147]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 56 "Waypoint_7"
+    movej(get_inverse_kin(p[.326746240719, .381880122801, .543632067781, -1.728309061734, .611142519439, -.666707955241], qnear=[-2.757519785557882, -1.7157309691058558, 1.0249671936035156, -2.224442783986227, -1.1997063795672815, 0.2924211025238037]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 57 "Wait: 2.0"
+    sleep(2.0)
+    $ 58 "If receiveFromServ[7]≟1"
+    if (receiveFromServ[7] == 1):
+      $ 59 "If Red≟0"
+      if (Red == 0):
+        $ 60 "MoveJ"
+        $ 61 "Red_Storage"
+        movej(get_inverse_kin(p[.060403333616, .413236356022, .007687076743, 3.133687366900, -.090652191497, .011756048233], qnear=[-1.981778923665182, -1.1117194334613245, 1.2773847579956055, -1.733441177998678, -1.5780981222735804, 0.14913880825042725]), a=1.3962634015954636, v=1.0471975511965976)
+        $ 62 "Set gribe= False "
+        set_tool_digital_out(0,   False  )
+        $ 63 "Wait: 1.0"
+        sleep(1.0)
+        $ 64 "Set Red=Red+1"
+        Red = Red + 1
+      else:
+        $ 65 "ElseIf Red≠0"
+        if (Red != 0):
+          $ 66 "MoveJ"
+          $ 67 "Red_Storage_2"
+          movej(get_inverse_kin(p[-.029486639492, .413322956982, .011809832094, -3.134873986910, .017684632414, -.001316125838], qnear=[-1.7756951490985315, -1.1457598845111292, 1.3127408027648926, -1.7447846571551722, -1.5682180563556116, 0.3086814284324646]), a=1.3962634015954636, v=1.0471975511965976)
+          $ 68 "Set gribe= False "
+          set_tool_digital_out(0,   False  )
+          $ 69 "Wait: 1.0"
+          sleep(1.0)
+        end
+      end
+    else:
+      $ 70 "ElseIf receiveFromServ[7]≟2"
+      if (receiveFromServ[7] == 2):
+        $ 71 "If Green≟0"
+        if (Green == 0):
+          $ 72 "MoveJ"
+          $ 73 "Green_Storage"
+          movej(get_inverse_kin(p[.057428527778, .316130222246, .005392603185, -3.139919814164, .047895678844, -.004133372787], qnear=[-2.1075285116778772, -1.5258734861956995, 1.8254542350769043, -1.8731191794024866, -1.5706518332110804, -0.003704849873678029]), a=1.3962634015954636, v=1.0471975511965976)
+          $ 74 "Set gribe= False "
+          set_tool_digital_out(0,   False  )
+          $ 75 "Wait: 1.0"
+          sleep(1.0)
+          $ 76 "Set Green=Green+1"
+          Green = Green + 1
+        else:
+          $ 77 "ElseIf Green≠0"
+          if (Green != 0):
+            $ 78 "MoveJ"
+            $ 79 "Green_Storage_2"
+            movej(get_inverse_kin(p[-.064937952813, .316074153229, .005367039272, 3.121339758997, -.000020389273, .000080506940], qnear=[-1.7220037619220179, -1.4917777220355433, 1.7798919677734375, -1.8391922155963343, -1.572031323109762, 0.3512992262840271]), a=1.3962634015954636, v=1.0471975511965976)
+            $ 80 "Set gribe= False "
+            set_tool_digital_out(0,   False  )
+            $ 81 "Wait: 1.0"
+            sleep(1.0)
+          end
+        end
+      else:
+        $ 82 "ElseIf receiveFromServ[7]≟3"
+        if (receiveFromServ[7] == 3):
+          $ 83 "If Blue≟0"
+          if (Blue == 0):
+            $ 84 "MoveJ"
+            $ 85 "Blue_Storage"
+            movej(get_inverse_kin(p[.066482671150, .220274573355, .014071791079, 3.133990375586, .000241822160, .000067306082], qnear=[-2.3674617449389856, -1.9598024527179163, 2.1276073455810547, -1.7336085478412073, -1.5740812460528772, -0.29450923601259404]), a=1.3962634015954636, v=1.0471975511965976)
+            $ 86 "Set gribe= False "
+            set_tool_digital_out(0,   False  )
+            $ 87 "Wait: 1.0"
+            sleep(1.0)
+            $ 88 "Set Blue=Blue+1"
+            Blue = Blue + 1
+          else:
+            $ 89 "ElseIf Blue≠0"
+            if (Blue != 0):
+              $ 90 "MoveJ"
+              $ 91 "Blue_Storage_2"
+              movej(get_inverse_kin(p[-.041401580883, .220280329312, .011150789345, 3.123696098752, -.000156038212, .000316022559], qnear=[-1.9023092428790491, -1.9721301237689417, 2.1438193321228027, -1.7259185949908655, -1.574609104787008, 0.17091453075408936]), a=1.3962634015954636, v=1.0471975511965976)
+              $ 92 "Set gribe= False "
+              set_tool_digital_out(0,   False  )
+              $ 93 "Wait: 1.0"
+              sleep(1.0)
+            end
+          end
+        else:
+          $ 94 "ElseIf receiveFromServ[7]≟4"
+          if (receiveFromServ[7] == 4):
+            $ 95 "MoveJ"
+            $ 96 "Skrald"
+            movej(get_inverse_kin(p[.365434226757, .138467005692, .144007917503, -2.835856503817, -1.141214577675, -.321810965623], qnear=[-3.2075567881213587, -1.517813507710592, 1.2603602409362793, -1.4746487776385706, -1.4165766874896448, -1.8878315130816858]), a=1.3962634015954636, v=1.0471975511965976)
+            $ 97 "Set gribe= False "
+            set_tool_digital_out(0,   False  )
+            $ 98 "Wait: 1.0"
+            sleep(1.0)
+          end
+        end
+      end
+    end
+    $ 99 "Wait: 1.0"
+    sleep(1.0)
+    $ 100 "targetPos=p[0, 0, 0, 0, 0, 0]"
+    targetPos=p[0, 0, 0, 0, 0, 0]
+    $ 101 "MoveJ"
+    $ 102 "Waypoint_7"
+    movej(get_inverse_kin(p[.326746240719, .381880122801, .543632067781, -1.728309061734, .611142519439, -.666707955241], qnear=[-2.757519785557882, -1.7157309691058558, 1.0249671936035156, -2.224442783986227, -1.1997063795672815, 0.2924211025238037]), a=1.3962634015954636, v=1.0471975511965976)
+  end
+end

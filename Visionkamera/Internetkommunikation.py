@@ -85,11 +85,10 @@ class TCP_pi_Server:
     def TCP_Modtaget (self, ID = 0, L = 4096,TCP_Luk = 1):
         data = self.conn.recv(L)
         data2 = data.decode('ascii')
-        if data.decode('ascii') == 'TCP_Luk'and TCP_Luk == 1:
-            self.s.close()
+        if data2 == 'TCP_Luk'and TCP_Luk == 1:
+            self.TCP_Luk()
             data2 ='TCP_Luk'
-            
-        data2 = data.decode('ascii')
+        
         print('data: ',data2)
         return data2
 

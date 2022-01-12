@@ -12,7 +12,7 @@ F1 = 0
 F2 = 0
 F3 = 0
 Robot_o = QR.Omregning('QR.txt')
-cap = OAKCamColor(1080,1080)
+cap = OAKCamColor(1920,1080)
 qr = True
 qr2 = False
 Firkan = False
@@ -51,7 +51,7 @@ while(True):
                 break
         #break
         qr = False
-        Firkan = True
+        Firkan = False
 
     if qr2:
         Data_QR,Robot = QR.QR(frame)

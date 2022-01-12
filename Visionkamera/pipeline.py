@@ -165,9 +165,10 @@ class Opening(PostProcessingBlock):
 
 pipeline_QR = PostProcessingPipeline([
     ConvertBGR2Gray(),
-    AverageBlur(filterSize=1),
-    Threshold(220,255)
+    IntensityPower(power=1.5,showOutput=False),
+    #Threshold(150,255)
     ])
+
 def GaussianBlur_QR(newVal):
     if newVal < 1:
         GaussianBlur_V_R = newVal
@@ -179,14 +180,15 @@ pipeline_4 = PostProcessingPipeline([
     AverageBlur(filterSize=5),
     IntensityPower(power=1.5,showOutput=False),
     ConvertBGR2HSV(),
-    HSVThreshold2(lowerBound = np.array([0,34,38]),upperBound=np.array([99,255,254]),trackbar= True,WindName='trackbar_4'),
+    HSVThreshold2(lowerBound = np.array([9,149,203]),upperBound=np.array([31,246,253]),trackbar= True,WindName='trackbar_4'),
     ConvertHSV2BGR(),
     ConvertBGR2Gray(showOutput=True, outputWindowName='trackbar_4'),
     Closing((5,5),5),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(5656, 100000,namedWindow=False,trackbar= True,WindName='trackbar_4'),
-    DetectShapes2(epsilon= 0.1,trackbar= True,WindName='trackbar_4')
+    ThresholdContours2(16770, 22567,namedWindow=False,trackbar= True,WindName='trackbar_4'),
+    DetectShapes2(epsilon= 0.14,trackbar= True,WindName='trackbar_4')
     ])
+    
 def GaussianBlur_4(newVal):
     if newVal < 1:
         GaussianBlur_V_R = newVal
@@ -195,15 +197,15 @@ def GaussianBlur_4(newVal):
     pipeline_4.blocks[0] = AverageBlur(filterSize=GaussianBlur_V_R)
 
 pipeline_1 = PostProcessingPipeline([
-    AverageBlur(filterSize=5),
+    AverageBlur(filterSize=9),
     IntensityPower(power=1.5,showOutput=False),
     ConvertBGR2HSV(),
-    HSVThreshold2(lowerBound = np.array([0,34,38]),upperBound=np.array([99,255,254]),trackbar= True,WindName='trackbar_1'),
+    HSVThreshold2(lowerBound = np.array([0,43,157]),upperBound=np.array([10,255,255]),trackbar= True,WindName='trackbar_1'),
     ConvertHSV2BGR(),
     ConvertBGR2Gray(showOutput=True, outputWindowName='trackbar_1'),
     Closing((5,5),5),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(5656, 100000,namedWindow=False,trackbar= True,WindName='trackbar_1'),
+    ThresholdContours2(5105, 12933,namedWindow=False,trackbar= True,WindName='trackbar_1'),
     DetectShapes2(epsilon= 0.1,trackbar= True,WindName='trackbar_1')
     ])
 def GaussianBlur_1(newVal):
@@ -214,15 +216,15 @@ def GaussianBlur_1(newVal):
     pipeline_1.blocks[0] = AverageBlur(GaussianBlur_V_R)    
 
 pipeline_2 = PostProcessingPipeline([
-    AverageBlur(filterSize=5),
+    AverageBlur(filterSize=22),
     IntensityPower(power=1.5,showOutput=False),
     ConvertBGR2HSV(),
-    HSVThreshold2(lowerBound = np.array([0,34,38]),upperBound=np.array([99,255,254]),trackbar= True,WindName='trackbar_2'),
+    HSVThreshold2(lowerBound = np.array([61,77,100]),upperBound=np.array([87,255,182]),trackbar= True,WindName='trackbar_2'),
     ConvertHSV2BGR(),
     ConvertBGR2Gray(showOutput=True, outputWindowName='trackbar_2'),
     Closing((5,5),5),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(5656, 100000,namedWindow=False,trackbar= True,WindName='trackbar_2'),
+    ThresholdContours2(5656, 23602,namedWindow=False,trackbar= True,WindName='trackbar_2'),
     DetectShapes2(epsilon= 0.1,trackbar= True,WindName='trackbar_2')
     ])
 def GaussianBlur_2(newVal):
@@ -236,12 +238,12 @@ pipeline_3 = PostProcessingPipeline([
     AverageBlur(filterSize=10),
     IntensityPower(power=1.5,showOutput=False),
     ConvertBGR2HSV(),
-    HSVThreshold2(lowerBound = np.array([0,34,38]),upperBound=np.array([99,255,254]),trackbar= True,WindName='trackbar_3'),
+    HSVThreshold2(lowerBound = np.array([91,147,56]),upperBound=np.array([112,255,245]),trackbar= True,WindName='trackbar_3'),
     ConvertHSV2BGR(),
     ConvertBGR2Gray(showOutput=True, outputWindowName='trackbar_3'),
     Closing((5,5),5),
     DetectContours( drawInfo = ContourDrawInfo((0, 0, 255), 2)),
-    ThresholdContours2(5656, 100000,namedWindow=False,trackbar= True,WindName='trackbar_3'),
+    ThresholdContours2(5656, 29193,namedWindow=False,trackbar= True,WindName='trackbar_3'),
     DetectShapes2(epsilon= 0.1,trackbar= True,WindName='trackbar_3')
     ])
 def GaussianBlur_3(newVal):
@@ -272,7 +274,6 @@ def PipeRes(frame):
             if s.points == 4:
                 cv2.drawContours(shapeImg, [s.contour], -1, (0, 255, 0), 4)
                 Firkan_Liste.append([m1,s])
-                break
         
         m1 +=1
     return Firkan_Liste
