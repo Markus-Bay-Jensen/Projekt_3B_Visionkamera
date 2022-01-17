@@ -118,6 +118,7 @@ def QR2(frame):
 class Omregning:
 
     def __init__(self,navn) -> None:
+        self.KaliCounter = 0
         self.BE_t = False
         self.Robot_O = [0,0,0,0]
         self.Robotnr = [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]
@@ -156,15 +157,20 @@ class Omregning:
         
         Break = False
         if self.Break1 and self.Break2 and self.Break3 and self.BE_t:
+            self.nulstilling = True
+            Break = True
+
+        if (self.Break1 and self.Break2 and self.Break3 and self.BE_t) or self.KaliCounter >= 60:
             print(self.Robot_O)
+            self.KaliCounter = 0
             self.Break1 = False
             self.Break2 = False
             self.Break3 = False
             self.BE_t_2 = False
-            self.nulstilling = True
-            Break = True
+        self.KaliCounter += 1    
+        
         print('')
-        print ('X',self.Break2,'Y',self.Break1,'V',self.Break3,'B',self.BE_t,'Break',Break)
+        print ('X',self.Break2,'Y',self.Break1,'V',self.Break3,'B',self.BE_t,'Break',Break,'nr',self.KaliCounter)
         print('')
         return QR_img,Break
 
@@ -173,7 +179,7 @@ class Omregning:
         
         #center = (w / 2, h / 2)
         #scale = 1.0
-        
+        print(Robot)
         
         Robotnr = self.Robotnr
         Break = False

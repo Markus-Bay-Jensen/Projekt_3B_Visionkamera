@@ -25,6 +25,8 @@ class Opstart(State):
 
     def Execute(self):
         print()
+        frame = F.cap.getPreviewFrame()
+        cv2.imshow("Firkan", frame)
         self.stateMachine.ChangeState(TCP_Connection())
 
 class TCP_Connection(State):
@@ -185,14 +187,15 @@ class Kalibrering_QR(State):
         cv2.imshow("QR", frame_QR)
         print("hej")
         key = cv2.waitKey(500)
-        if key == ord('k'):
-            self.stateMachine.ChangeState(Kalibrering_F())
-        if key == ord('l'):
-            pass
-        else:
-            if Break:
-                F.TCP.TCP_Send('[100]')
-                self.stateMachine.ChangeState(Server_listening())
+        if Break:
+            if key == ord('k'):
+                self.stateMachine.ChangeState(Kalibrering_F())
+            else:
+                if key == ord('l'):
+                    pass
+                else:
+                    F.TCP.TCP_Send('[100]')
+                    self.stateMachine.ChangeState(Server_listening())
                     
 class Kalibrering_F(State):
     def Enter(self):
